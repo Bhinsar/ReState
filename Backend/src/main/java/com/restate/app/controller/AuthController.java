@@ -98,7 +98,6 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Validated @RequestBody LoginRequest loginRequest,
                                                            @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType,
                                                            HttpServletResponse response) {
-
         User savedUser = authService.login(loginRequest);
 
 

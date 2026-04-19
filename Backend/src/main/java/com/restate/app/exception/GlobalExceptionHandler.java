@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(
             BadCredentialsException ex) {
-        return ApiResponse.unauthorized("Invalid email or password");
+        return ApiResponse.badRequest("Invalid email or password");
     }
 
     // Catches @Validated failures
