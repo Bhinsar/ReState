@@ -33,9 +33,7 @@ const LoginForm = () => {
             toast.success(`Welcome back! ${res.firstName}`);
         } catch(err) {
             if (err instanceof ApiError) {
-                if (err.status === 400 || err.status === 404) {
-                    setError(err.message);
-                }
+                setError(err.message);
             }
         } finally {
             setIsLogin(false);

@@ -77,11 +77,11 @@ api.interceptors.response.use(
 
         if (!error.response) {
             if (error.code === 'ECONNABORTED') {
-                toast.error('Request timed out. Please try again.');
-                return Promise.reject(new ApiError('Request timed out. Please try again.', 408));
+                return toast.error('Request timed out. Please try again.');
+                // return Promise.reject(new ApiError('Request timed out. Please try again.', 408));
             }
-            toast.error('Network error. Please check your connection.');
-            return Promise.reject(new ApiError('Network error. Please check your connection.', 0));
+            // return Promise.reject(new ApiError('Network error. Please check your connection.', 0));
+            return toast.error('Network error. Please check your connection.');
         }
 
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -115,8 +115,8 @@ api.interceptors.response.use(
 
         const globalToastErrors = [429, 500, 503];
         if (globalToastErrors.includes(error.response?.status)) {
-            toast.error(error.response?.data?.message);
-            return Promise.reject(new ApiError(error.response?.data?.message, error.response?.status));
+            return toast.error(error.response?.data?.message);
+            // return Promise.reject(new ApiError(error.response?.data?.message, error.response?.status));
         }
 
         const message = error.response?.data?.message ?? 'Something went wrong';
