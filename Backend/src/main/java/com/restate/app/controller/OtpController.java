@@ -20,7 +20,7 @@ public class OtpController {
 
     private final OtpService otpService;
 
-    @PostMapping("/verify")
+    @PostMapping("/verify-email")
     public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(@RequestBody Otp otpReq) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

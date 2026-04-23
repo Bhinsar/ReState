@@ -135,7 +135,7 @@ public class AuthController {
             throw AuthException.tokenExpired();
 
         String email = jwtService.extractUsername(refreshToken);
-        if (email == null && jwtService.isTokenExpired(refreshToken))
+        if (email == null || jwtService.isTokenExpired(refreshToken))
             throw AuthException.tokenExpired();
 
         User user = userRepo.findByEmail(email)
