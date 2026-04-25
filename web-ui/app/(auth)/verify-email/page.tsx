@@ -1,15 +1,15 @@
 import React, {JSX} from 'react';
 import {Metadata} from "next";
-import EmailVerificationView from "@/components/pages/emailVerification/emailVerificationView";
+import VerifyEmailView from "@/components/pages/verifyEmail/verifyEmailView";
 
 export const metadata: Metadata = {
     title: "Email Verification",
     description: "Verification email verification",
 }
-function EmailVerification(): JSX.Element {
+function VerifyEmail(): JSX.Element {
     return (
-        <EmailVerificationView/>
+        <VerifyEmailView/>
     );
 }
 
-export default EmailVerification;
+export default VerifyEmail;

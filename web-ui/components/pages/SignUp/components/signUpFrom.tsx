@@ -16,10 +16,13 @@ import {toast} from "sonner";
 import {ApiError} from "@/services/api";
 import ErrorMessage from "@/components/common/errorMessage";
 import SubmitButton from "@/components/common/submitButton";
+import {secureStorage} from "@/lib/secureStorage";
+import {useRouter} from "next/navigation";
 
 const SignUpFrom = () => {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [error, setError] = React.useState<null | string>(null);
+    const router = useRouter();
 
 
     const eighteenYearsAgo = React.useMemo(() => {
@@ -45,6 +48,8 @@ const SignUpFrom = () => {
         setError(null);
         try {
             const res = await AuthService.signUp(data);
+            secureStorage.setItem("avatarUrl", res.avatarUrl)
+            router.push("/verify-email")
             toast.success(`Welcome! ${res.firstName}`);
         } catch (err) {
             if (err instanceof ApiError) {
@@ -74,13 +79,29 @@ const SignUpFrom = () => {
                            label={"Password"} isPassword={true}/>
                 {/*number*/}
                 <div className="text-md font-medium">Phone Number</div>
-                <div className="flex gap-2 w-full">
-                    <FormInput name={"countryCode"} control={control} type={"select"}
-                               options={countries.map((country) => ({
-                                   label: `${country.flag}  ${country.phone_code}`,
-                                   value: country.phone_code
-                               }))}/>
-                    <FormInput name={"phoneNumber"} control={control} style={"w-70"} placeholder={"5550123456"}/>
+                <div className="flex flex-row items-start gap-2 w-full">
+                    {/* Country Code: Fixed width or constrained to content */}
+                    <div className="w-1/3 sm:w-32">
+                        <FormInput
+                            name={"countryCode"}
+                            control={control}
+                            type={"select"}
+                            options={countries.map((country) => ({
+                                label: `${country.flag} ${country.phone_code}`,
+                                value: country.phone_code
+                            }))}
+                        />
+                    </div>
+
+                    {/* Phone Number: Expands to fill the rest of the row */}
+                    <div className="flex-1">
+                        <FormInput
+                            name={"phoneNumber"}
+                            control={control}
+                            placeholder={"5550123456"}
+                            style={"w-full"} // Ensures it fills its flex container
+                        />
+                    </div>
                 </div>
                 {/*dob*/}
                 <Controller

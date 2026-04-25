@@ -45,7 +45,7 @@ public class AuthController {
                 : AuthResponse.forWeb(user);
 
         if (!"mobile".equals(clientType)) {
-            addCookie(response, accessToken, refreshToken);
+            addCookie(response, accessToken, refreshToken, user.getRegistrationStep() );
         }
 
         // Logic to return 201 for Register and 200 for Login
@@ -54,7 +54,7 @@ public class AuthController {
                 : ApiResponse.ok(message, authData);
     }
 
-    private void addCookie(HttpServletResponse response, String accessToken, String refreshToken) {
+    private void addCookie(HttpServletResponse response, String accessToken,  String refreshToken, User.RegisterStep step ) {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(true)
@@ -71,8 +71,16 @@ public class AuthController {
                 .maxAge(Duration.ofDays(30))
                 .build();
 
+        ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(step))
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .build();
+
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
     }
 
     @PostMapping("/register")
@@ -151,9 +159,45 @@ public class AuthController {
                     RefreshResponse.forMobile(newAccessToken, newRefreshToken));
         } else {
             // Web → set new cookies, return empty data
-            addCookie(response, newAccessToken, newRefreshToken);
+            addCookie(response, newAccessToken, newRefreshToken, user.getRegistrationStep());
             return ApiResponse.ok("Token refreshed successfully", RefreshResponse.forWeb());
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response){
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie stepCookie = ResponseCookie.from("step", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
+        
+        String message = "Successfully lout the user";
+        
+        return ApiResponse.ok(message);
+        
     }
 
 

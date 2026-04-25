@@ -31,12 +31,23 @@ export class AuthService {
         }
     }
 
-    static async verifyOtp(otp: string) {
+    static async verifyOtp(otp: string): Promise<authResponse> {
         const data = {
             otp: otp
         };
+        try {
+            const res = await api.post<authResponse>(ApiEndPont.verifyOTP, data);
+            return res.data;
+        } catch (e) {
+            throw e;
+        }
+    }
 
-        const res = await api.post(ApiEndPont.verifyOTP, data);
-        return res.data;
+    static async logout(): Promise<void> {
+        try{
+            await api.post(ApiEndPont.logout)
+        }catch (e){
+            throw e
+        }
     }
 }

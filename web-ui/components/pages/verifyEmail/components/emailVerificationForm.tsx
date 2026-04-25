@@ -4,6 +4,7 @@ import { ApiError } from "@/services/api";
 import { AuthService } from "@/services/auth/auth.Service";
 import SubmitButton from "@/components/common/submitButton";
 import ErrorMessage from "@/components/common/errorMessage";
+import {secureStorage} from "@/lib/secureStorage";
 
 // Updated to 6 as per your request
 const OTP_LENGTH = 6;
@@ -25,6 +26,7 @@ function EmailVerificationForm() {
                 return;
             }
             const res = await AuthService.verifyOtp(otpValue);
+            secureStorage.setItem("registerStep", res.registerStep)
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);

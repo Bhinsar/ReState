@@ -7,6 +7,7 @@ export interface authResponse{
     lastName: string,
     email: string,
     registerStep: string,
+    avatarUrl: string
 }
 
 export interface signUpParams{

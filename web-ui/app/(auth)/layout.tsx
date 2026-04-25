@@ -7,8 +7,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full">
       {/* Left Side: Logo (50%) */}
-      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-gradient-to-br from-brand-primary to-brand-secondary p-12 ">
-        <div className="relative w-full max-w-75">
+      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-gradient-to-br from-brand-primary to-brand-secondary p-12 min-h-screen">
+        <div className="w-full max-w-75">
           <AspectRatio ratio={1 / 1}>
             <Image
               src={Logo.image}
@@ -25,9 +25,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Right Side: Form (50%) */}
-      <main className="flex flex-col w-full md:w-1/2 items-center justify-center p-8 h-screen">
-          <div className={"flex md:hidden justify-center flex-col align-top items-center "}>
-              <div className="relative w-full max-w-25">
+      <main className="flex flex-col w-full md:w-1/2 items-center justify-center p-8 ">
+          <div className={"flex md:hidden justify-center flex-col align-top items-center"}>
+              <div className="w-full max-w-25">
                   <AspectRatio ratio={1 / 1}>
                       <Image
                           src={Logo.image}

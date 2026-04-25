@@ -14,6 +14,8 @@ import {ApiError} from "@/services/api";
 import {toast} from "sonner"
 import ErrorMessage from "@/components/common/errorMessage";
 import SubmitButton from "@/components/common/submitButton";
+import {secureStorage} from "@/lib/secureStorage";
+import {useRouter} from "next/navigation";
 
 const LoginForm = () => {
     const {control, handleSubmit} = useForm<z.infer<typeof loginSchema>>({
@@ -25,12 +27,17 @@ const LoginForm = () => {
     });
     const [isLogin, setIsLogin] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const router =  useRouter();
 
     const login = async (data: loginParams) => {
         try {
             setIsLogin(true);
             setError(null);
+
             const res = await AuthService.login(data);
+
+            secureStorage.setItem("avatarUrl", res.avatarUrl)
+            router.push("/")
             toast.success(`Welcome back! ${res.firstName}`);
         } catch (err) {
             if (err instanceof ApiError) {

@@ -3,14 +3,23 @@ import React from 'react';
 import Title from "@/components/common/title";
 import SignUpFrom from "@/components/pages/SignUp/components/signUpFrom";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/common/BackButton";
 
 function SignUpView() {
     const router = useRouter();
     const handleLogin = () => {
         router.push("/login");
     }
+    const onClick=async()=>{
+        try{
+            router.push("/login");
+        }catch (e){
+            console.error(e);
+        }
+    }
     return (
-        <div>
+        <div className={'md:relative'}>
+            <BackButton className={'md:-top-13 md:-left-4'} onClick={onClick} />
             <Title title={"SignUp"} subTitle={"Get a new house"}/>
             <SignUpFrom/>
             <div className={"pt-8 flex flex-col items-center justify-center"}>

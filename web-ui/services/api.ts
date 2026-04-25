@@ -1,5 +1,6 @@
 import axios, {AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig} from 'axios';
 import {toast} from "sonner";
+import {AuthService} from "@/services/auth/auth.Service";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -108,6 +109,7 @@ api.interceptors.response.use(
             }catch(error) {
                 isRefreshing = false;
                 refreshQueue = [];
+                await AuthService.logout();
                 window.location.href = '/login';
                 return Promise.reject(new ApiError('Session expired. Please login again.', 401));
             }
