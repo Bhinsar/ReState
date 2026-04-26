@@ -16,6 +16,7 @@ import ErrorMessage from "@/components/common/errorMessage";
 import SubmitButton from "@/components/common/submitButton";
 import {secureStorage} from "@/lib/secureStorage";
 import {useRouter} from "next/navigation";
+import {signIn} from "next-auth/react";
 
 const LoginForm = () => {
     const {control, handleSubmit} = useForm<z.infer<typeof loginSchema>>({
@@ -78,6 +79,7 @@ const LoginForm = () => {
                     image={<Image src={"/images/google.svg"} alt={"googleLogo"} width={20} height={20}
                                   className="object-contain "/>}
                     label={"Continue with Google"}
+                    onClick={() => signIn("google", { callbackUrl: "/register-user" })}
                 />
             </div>
 

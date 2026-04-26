@@ -16,6 +16,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -45,7 +46,7 @@ public class AuthController {
                 : AuthResponse.forWeb(user);
 
         if (!"mobile".equals(clientType)) {
-            addCookie(response, accessToken, refreshToken, user.getRegistrationStep() );
+            addCookie(response, accessToken, refreshToken, user.getRegistrationStep());
         }
 
         // Logic to return 201 for Register and 200 for Login
@@ -54,7 +55,7 @@ public class AuthController {
                 : ApiResponse.ok(message, authData);
     }
 
-    private void addCookie(HttpServletResponse response, String accessToken,  String refreshToken, User.RegisterStep step ) {
+    private void addCookie(HttpServletResponse response, String accessToken, String refreshToken, User.RegisterStep step) {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(true)
@@ -109,7 +110,6 @@ public class AuthController {
         User savedUser = authService.login(loginRequest);
 
 
-
         return buildAuthResponse(savedUser, clientType, response, false);
     }
 
@@ -137,7 +137,7 @@ public class AuthController {
 
         }
 
-        log.info("refreshtoken: "+ refreshToken);
+        log.info("refreshToken: " + refreshToken);
 
         if (refreshToken == null)
             throw AuthException.tokenExpired();
@@ -150,7 +150,7 @@ public class AuthController {
                 .orElseThrow(AuthException::tokenExpired);
 
         // Generate new tokens
-        String newAccessToken  = jwtService.generate(user, 1000L * 60 * 60 * 24);
+        String newAccessToken = jwtService.generate(user, 1000L * 60 * 60 * 24);
         String newRefreshToken = jwtService.generate(user, 1000L * 60 * 60 * 24 * 30);
 
         if ("mobile".equals(clientType)) {
@@ -165,7 +165,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response){
+    public ResponseEntity<?> logout(HttpServletResponse response) {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
                 .secure(true)
@@ -193,10 +193,18 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
-        
+
         String message = "Successfully lout the user";
-        
+
         return ApiResponse.ok(message);
+
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> goggleLogin(@Validated @RequestBody GoogleAuthRequest request, HttpServletResponse response, @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType) throws Exception {
+        User user = authService.googleLogin(request.id_token());
+        
+        return buildAuthResponse(user, clientType, response, false);
         
     }
 
