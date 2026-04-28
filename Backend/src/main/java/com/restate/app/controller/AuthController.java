@@ -14,8 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -45,7 +47,7 @@ public class AuthController {
                 : AuthResponse.forWeb(user);
 
         if (!"mobile".equals(clientType)) {
-            addCookie(response, accessToken, refreshToken);
+            addCookie(response, accessToken, refreshToken, user.getRegistrationStep());
         }
 
         // Logic to return 201 for Register and 200 for Login
@@ -54,7 +56,7 @@ public class AuthController {
                 : ApiResponse.ok(message, authData);
     }
 
-    private void addCookie(HttpServletResponse response, String accessToken, String refreshToken) {
+    private void addCookie(HttpServletResponse response, String accessToken, String refreshToken, User.RegisterStep step) {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(true)
@@ -71,8 +73,16 @@ public class AuthController {
                 .maxAge(Duration.ofDays(30))
                 .build();
 
+        ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(step))
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .build();
+
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
     }
 
     @PostMapping("/register")
@@ -98,9 +108,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Validated @RequestBody LoginRequest loginRequest,
                                                            @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType,
                                                            HttpServletResponse response) {
-
         User savedUser = authService.login(loginRequest);
-
 
 
         return buildAuthResponse(savedUser, clientType, response, false);
@@ -130,20 +138,20 @@ public class AuthController {
 
         }
 
-        log.info("refreshtoken: "+ refreshToken);
+        log.info("refreshToken: " + refreshToken);
 
         if (refreshToken == null)
             throw AuthException.tokenExpired();
 
         String email = jwtService.extractUsername(refreshToken);
-        if (email == null && jwtService.isTokenExpired(refreshToken))
+        if (email == null || jwtService.isTokenExpired(refreshToken))
             throw AuthException.tokenExpired();
 
         User user = userRepo.findByEmail(email)
                 .orElseThrow(AuthException::tokenExpired);
 
         // Generate new tokens
-        String newAccessToken  = jwtService.generate(user, 1000L * 60 * 60 * 24);
+        String newAccessToken = jwtService.generate(user, 1000L * 60 * 60 * 24);
         String newRefreshToken = jwtService.generate(user, 1000L * 60 * 60 * 24 * 30);
 
         if ("mobile".equals(clientType)) {
@@ -152,10 +160,81 @@ public class AuthController {
                     RefreshResponse.forMobile(newAccessToken, newRefreshToken));
         } else {
             // Web → set new cookies, return empty data
-            addCookie(response, newAccessToken, newRefreshToken);
+            addCookie(response, newAccessToken, newRefreshToken, user.getRegistrationStep());
             return ApiResponse.ok("Token refreshed successfully", RefreshResponse.forWeb());
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie stepCookie = ResponseCookie.from("step", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
+
+        String message = "Successfully lout the user";
+
+        return ApiResponse.ok(message);
+
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(@Validated @RequestBody GoogleAuthRequest request, HttpServletResponse response, @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType) throws Exception {
+        User user = authService.googleLogin(request.id_token());
+        
+        return buildAuthResponse(user, clientType, response, false);
+        
+    }
+
+    @PostMapping("/register-user")
+    public ResponseEntity<ApiResponse<AuthResponse>> registerUser(@Validated @RequestBody RegisterUserRequest request, HttpServletResponse response, @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType){
+        LocalDate dob = request.dateOfBirth()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        long age = ChronoUnit.YEARS.between(dob, LocalDate.now());
+
+        if (age < 18)
+            return ApiResponse.badRequest("Age must be 18 or above");
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user =  authService.regiseruser(request, email);
+        String message = "User registered successfully";
+        AuthResponse data = AuthResponse.forWeb(user);
+        if (!"mobile".equals(clientType)) {
+            ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(user.getRegistrationStep()))
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
+        }
+        return ApiResponse.ok(message, data);
+    }
 
 }

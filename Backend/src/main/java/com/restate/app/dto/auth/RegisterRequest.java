@@ -34,7 +34,6 @@ public record RegisterRequest(
 
 //    country code
     @NotBlank(message = "country code is required")
-
     String countryCode,
 
 //    phone number

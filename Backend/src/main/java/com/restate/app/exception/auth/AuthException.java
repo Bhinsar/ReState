@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 public class AuthException extends AppException {
 
-    public AuthException(HttpStatus status, String message){
+    public AuthException(HttpStatus status, String message) {
         super(status, message);
     }
 
@@ -20,15 +20,21 @@ public class AuthException extends AppException {
     public static AuthException tokenExpired() {
         return new AuthException(HttpStatus.UNAUTHORIZED, "Session expired, please login again");
     }
+
     public static AuthException otpExpired() {
         return new AuthException(HttpStatus.BAD_REQUEST, "OTP is expired or Invalid");
     }
+
     public static AuthException noUserFound() {
         return new AuthException(HttpStatus.BAD_REQUEST, "User don't exists");
     }
-    public static AuthException invalidOTP(){
+
+    public static AuthException invalidOTP() {
         return new AuthException(HttpStatus.BAD_REQUEST, "Otp is Required and should be 6 charter long");
     }
+    public static AuthException invalidToken() {
+            return new AuthException(HttpStatus.BAD_REQUEST, "Invalid Google token");
+        }
 
 
 }

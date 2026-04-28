@@ -83,7 +83,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
         // Cookie
         if (request.getCookies() != null) {
             return Arrays.stream(request.getCookies())
-                    .filter(cookie -> "token".equals(cookie.getName()))
+                    .filter(cookie -> "accessToken".equals(cookie.getName()))
                     .map(Cookie::getValue)
                     .findFirst()
                     .orElse(null);
