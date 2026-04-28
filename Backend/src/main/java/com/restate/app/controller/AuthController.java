@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -201,12 +202,39 @@ public class AuthController {
     }
 
     @PostMapping("/google")
-    public ResponseEntity<ApiResponse<AuthResponse>> goggleLogin(@Validated @RequestBody GoogleAuthRequest request, HttpServletResponse response, @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType) throws Exception {
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(@Validated @RequestBody GoogleAuthRequest request, HttpServletResponse response, @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType) throws Exception {
         User user = authService.googleLogin(request.id_token());
         
         return buildAuthResponse(user, clientType, response, false);
         
     }
 
+    @PostMapping("/register-user")
+    public ResponseEntity<ApiResponse<AuthResponse>> registerUser(@Validated @RequestBody RegisterUserRequest request, HttpServletResponse response, @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType){
+        LocalDate dob = request.dateOfBirth()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        long age = ChronoUnit.YEARS.between(dob, LocalDate.now());
+
+        if (age < 18)
+            return ApiResponse.badRequest("Age must be 18 or above");
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user =  authService.regiseruser(request, email);
+        String message = "User registered successfully";
+        AuthResponse data = AuthResponse.forWeb(user);
+        if (!"mobile".equals(clientType)) {
+            ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(user.getRegistrationStep()))
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
+        }
+        return ApiResponse.ok(message, data);
+    }
 
 }

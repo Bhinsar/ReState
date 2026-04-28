@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import {NextResponse} from "next/server";
+import type {NextRequest} from "next/server";
 
 enum RegisterStep {
     GMAIL = "GMAIL",
@@ -14,52 +14,60 @@ const VERIFY_ROUTE = "/verify-email";
 const REGISTER_ROUTE = "/register-user";
 
 export async function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
+    const {pathname} = request.nextUrl;
     const token = request.cookies.get("accessToken")?.value;
     const step = request.cookies.get(STEP_COOKIE)?.value as RegisterStep | undefined;
 
-    const isVerified = step === RegisterStep.EMAIL_VERIFIED;
     const isGmailUser = step === RegisterStep.GMAIL;
     const isRegisteredNotVerified = step === RegisterStep.REGISTERED;
+    const isVerified = step === RegisterStep.EMAIL_VERIFIED;
 
-    const isPublic = PUBLIC_ROUTES.some(
-        (r) => pathname === r || (r !== "/" && pathname.startsWith(r))
-    );
-    const isAuth = AUTH_ROUTES.some((r) => pathname.startsWith(r));
     const isVerifyRoute = pathname.startsWith(VERIFY_ROUTE);
     const isRegisterRoute = pathname.startsWith(REGISTER_ROUTE);
 
-    // ── 1. No token → logged out ──────────────────────────────────
+    // 1. If no token, they must be on Auth or Public routes
     if (!token) {
+        const isPublic = PUBLIC_ROUTES.some(r => pathname === r || (r !== "/" && pathname.startsWith(r)));
+        const isAuth = AUTH_ROUTES.some(r => pathname.startsWith(r));
+
         if (isPublic || isAuth) return NextResponse.next();
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // ── 2. Already on the route they should be on → let through ───
-    // Prevents redirect loops
-    if (isGmailUser && isRegisterRoute) return NextResponse.next();
-    if (isRegisteredNotVerified && isVerifyRoute) return NextResponse.next();
-
-    // ── 3. Block auth pages for logged-in users ────────────────────
-    if (isAuth) {
-        if (isGmailUser) return NextResponse.redirect(new URL(REGISTER_ROUTE, request.url));
-        if (isRegisteredNotVerified) return NextResponse.redirect(new URL(VERIFY_ROUTE, request.url));
-        return NextResponse.redirect(new URL("/", request.url));
+    if(token){
+        const isAuth = AUTH_ROUTES.some(r => pathname === r || (r !== "/" && pathname.startsWith(r)));
+        const isVerify = pathname.startsWith(VERIFY_ROUTE);
+        const isRegister = pathname.startsWith(REGISTER_ROUTE);
+        if(isAuth || isVerify || isRegister)return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // ── 4. Verification wall ───────────────────────────────────────
-    // Only block non-public routes for unverified users
-    if (!isVerified && !isPublic) {
-        if (isGmailUser) return NextResponse.redirect(new URL(REGISTER_ROUTE, request.url));
-        return NextResponse.redirect(new URL(VERIFY_ROUTE, request.url));
+    // 2. STRICTOR LOCKDOWN: Check steps before anything else
+
+    // If they are a GMAIL user, they MUST be on REGISTER_ROUTE
+    if (isGmailUser) {
+        if (!isRegisterRoute) {
+            return NextResponse.redirect(new URL(REGISTER_ROUTE, request.url));
+        }
+        return NextResponse.next(); // Stay on Register page
     }
 
-    // ── 5. Verified users → block register/verify routes ──────────
-    if (isVerified && (isRegisterRoute || isVerifyRoute)) {
-        return NextResponse.redirect(new URL("/", request.url));
+    // If they are REGISTERED but not verified, they MUST be on VERIFY_ROUTE
+    if (isRegisteredNotVerified) {
+        if (!isVerifyRoute) {
+            return NextResponse.redirect(new URL(VERIFY_ROUTE, request.url));
+        }
+        return NextResponse.next(); // Stay on Verify page
     }
 
-    // ── 6. Allow everything else ───────────────────────────────────
+    // 3. LOGIC FOR VERIFIED USERS
+    if (isVerified) {
+        // Prevent verified users from going back to registration/verification pages
+        if (isRegisterRoute || isVerifyRoute || AUTH_ROUTES.some(r => pathname.startsWith(r))) {
+            return NextResponse.redirect(new URL("/", request.url));
+        }
+        return NextResponse.next();
+    }
+
     return NextResponse.next();
 }
 

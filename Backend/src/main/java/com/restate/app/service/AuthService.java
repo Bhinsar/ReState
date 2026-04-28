@@ -6,6 +6,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.restate.app.dto.auth.LoginRequest;
 import com.restate.app.dto.auth.RegisterRequest;
+import com.restate.app.dto.auth.RegisterUserRequest;
 import com.restate.app.entity.User;
 import com.restate.app.exception.auth.AuthException;
 import com.restate.app.repository.UserRepo;
@@ -122,4 +123,17 @@ public class AuthService {
         return userRepo.save(createUser);
     }
 
+    public User regiseruser(RegisterUserRequest request, String email) {
+
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> AuthException.tokenExpired());
+
+        user.setCountryCode(request.countryCode());
+        user.setPhoneNumber(request.phoneNumber());
+        user.setDateOfBirth(request.dateOfBirth());
+        user.setRegistrationStep(User.RegisterStep.EMAIL_VERIFIED);
+
+        return userRepo.save(user);
+
+    }
 }

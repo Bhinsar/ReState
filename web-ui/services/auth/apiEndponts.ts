@@ -4,4 +4,5 @@ export const ApiEndPont= {
     resendOtp: "/otp/resend-otp",
     verifyOTP: "/otp/verify-email",
     logout:"/auth/logout",
+    registerUser:"/auth/register-user",
 }

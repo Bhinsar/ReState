@@ -5,6 +5,7 @@ import { AuthService } from "@/services/auth/auth.Service";
 import SubmitButton from "@/components/common/submitButton";
 import ErrorMessage from "@/components/common/errorMessage";
 import {secureStorage} from "@/lib/secureStorage";
+import {useRouter} from "next/navigation";
 
 // Updated to 6 as per your request
 const OTP_LENGTH = 6;
@@ -14,6 +15,8 @@ function EmailVerificationForm() {
     const [isSubmit, setIsSubmit] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const router = useRouter();
 
 
     const submitOtp = async (otpValue: string) => {
@@ -25,8 +28,8 @@ function EmailVerificationForm() {
                 setError(`OTP length should be ${OTP_LENGTH} characters long.`);
                 return;
             }
-            const res = await AuthService.verifyOtp(otpValue);
-            secureStorage.setItem("registerStep", res.registerStep)
+            await AuthService.verifyOtp(otpValue);
+            router.push("/")
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);

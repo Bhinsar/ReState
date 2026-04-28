@@ -1,4 +1,4 @@
-import {authResponse, loginParams, signUpParams} from "@/services/auth/auth.Interface";
+import {authResponse, loginParams, registerUserParams, signUpParams} from "@/services/auth/auth.Interface";
 import {ApiEndPont} from "@/services/auth/apiEndponts";
 import {api} from '@/services/api'
 
@@ -48,6 +48,15 @@ export class AuthService {
             await api.post(ApiEndPont.logout)
         }catch (e){
             throw e
+        }
+    }
+
+    static async registerUser(data: registerUserParams): Promise<authResponse> {
+        try {
+            const res = await api.post<authResponse>(ApiEndPont.registerUser, data);
+            return res.data;
+        } catch (e) {
+            throw e;
         }
     }
 }
