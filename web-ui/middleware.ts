@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
         if(isAuth || isVerify || isRegister)return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // 2. STRICTOR LOCKDOWN: Check steps before anything else
+    // 2. STRICTOR LOCKDOWN: Check steps before anything else//
 
     // If they are a GMAIL user, they MUST be on REGISTER_ROUTE
     if (isGmailUser) {
