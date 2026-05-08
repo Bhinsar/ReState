@@ -8,7 +8,7 @@ enum RegisterStep {
 }
 
 const STEP_COOKIE = "step";
-const PUBLIC_ROUTES = ["/", "/about", "/contact"];
+const PUBLIC_ROUTES = ["/", "/explore"];
 const AUTH_ROUTES = ["/login", "/sign-up"];
 const VERIFY_ROUTE = "/verify-email";
 const REGISTER_ROUTE = "/register-user";
@@ -22,51 +22,46 @@ export async function middleware(request: NextRequest) {
     const isRegisteredNotVerified = step === RegisterStep.REGISTERED;
     const isVerified = step === RegisterStep.EMAIL_VERIFIED;
 
+    const isPublicRoute = PUBLIC_ROUTES.some(r => pathname === r || (r !== "/" && pathname.startsWith(r + "/")));
+    const isAuthRoute = AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r));
     const isVerifyRoute = pathname.startsWith(VERIFY_ROUTE);
     const isRegisterRoute = pathname.startsWith(REGISTER_ROUTE);
 
-    // 1. If no token, they must be on Auth or Public routes
+    // ── 1. NO TOKEN ──────────────────────────────────────────────────────────
     if (!token) {
-        const isPublic = PUBLIC_ROUTES.some(r => pathname === r || (r !== "/" && pathname.startsWith(r)));
-        const isAuth = AUTH_ROUTES.some(r => pathname.startsWith(r));
-
-        if (isPublic || isAuth) return NextResponse.next();
+        if (isPublicRoute || isAuthRoute) return NextResponse.next();
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    if(token){
-        const isAuth = AUTH_ROUTES.some(r => pathname === r || (r !== "/" && pathname.startsWith(r)));
-        const isVerify = pathname.startsWith(VERIFY_ROUTE);
-        const isRegister = pathname.startsWith(REGISTER_ROUTE);
-        if(isAuth || isVerify || isRegister)return NextResponse.redirect(new URL("/", request.url));
-    }
+    // ── 2. HAS TOKEN — STEP-BASED ROUTING ───────────────────────────────────
 
-    // 2. STRICTOR LOCKDOWN: Check steps before anything else//
-
-    // If they are a GMAIL user, they MUST be on REGISTER_ROUTE
+    // GMAIL user: must complete profile before anything else
     if (isGmailUser) {
-        if (!isRegisterRoute) {
-            return NextResponse.redirect(new URL(REGISTER_ROUTE, request.url));
-        }
-        return NextResponse.next(); // Stay on Register page
+        if (isAuthRoute) return NextResponse.redirect(new URL(REGISTER_ROUTE, request.url));
+        if (!isRegisterRoute) return NextResponse.redirect(new URL(REGISTER_ROUTE, request.url));
+        return NextResponse.next();
     }
 
-    // If they are REGISTERED but not verified, they MUST be on VERIFY_ROUTE
+    // REGISTERED but not verified: must verify email
     if (isRegisteredNotVerified) {
-        if (!isVerifyRoute) {
-            return NextResponse.redirect(new URL(VERIFY_ROUTE, request.url));
-        }
-        return NextResponse.next(); // Stay on Verify page
+        if (isAuthRoute) return NextResponse.redirect(new URL(VERIFY_ROUTE, request.url));
+        if (!isVerifyRoute) return NextResponse.redirect(new URL(VERIFY_ROUTE, request.url));
+        return NextResponse.next();
     }
 
-    // 3. LOGIC FOR VERIFIED USERS
+    // FULLY VERIFIED user
     if (isVerified) {
-        // Prevent verified users from going back to registration/verification pages
-        if (isRegisterRoute || isVerifyRoute || AUTH_ROUTES.some(r => pathname.startsWith(r))) {
+        // Kick them away from auth/register/verify pages
+        if (isAuthRoute || isRegisterRoute || isVerifyRoute) {
             return NextResponse.redirect(new URL("/", request.url));
         }
         return NextResponse.next();
     }
+
+    // ── 3. TOKEN EXISTS BUT NO STEP COOKIE YET ───────────────────────────────
+    // This is the gap window right after Google login before step cookie is set.
+    // Only block auth routes, let everything else through.
+    if (isAuthRoute) return NextResponse.redirect(new URL("/", request.url));
 
     return NextResponse.next();
 }

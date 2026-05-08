@@ -25,7 +25,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Right Side: Form (50%) */}
-      <main className="flex flex-col w-full md:w-1/2 items-center justify-center p-8 ">
+      <main className="flex flex-col w-full items-center md:w-1/2 m-auto justify-center p-8">
           <div className={"flex md:hidden justify-center flex-col align-top items-center"}>
               <div className="w-full max-w-25">
                   <AspectRatio ratio={1 / 1}>

@@ -1,4 +1,4 @@
-import {LucideHome} from "lucide-react";
+import {LucideHome, Search} from "lucide-react";
 
 export interface NavItemsInterface {
     label: string;
@@ -11,5 +11,10 @@ export const NavItem:NavItemsInterface[] = [
         label: "Home",
         to: "/",
         icon: <LucideHome size={18}/>
+    },
+    {
+        label: "Explore",
+        to: "/explore",
+        icon: <Search size={18}/>
     }
 ]

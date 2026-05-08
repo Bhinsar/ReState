@@ -48,7 +48,6 @@ const SignUpFrom = () => {
         setError(null);
         try {
             const res = await AuthService.signUp(data);
-            secureStorage.setItem("avatarUrl", res.avatarUrl)
             router.push("/verify-email")
             toast.success(`Welcome! ${res.firstName}`);
         } catch (err) {

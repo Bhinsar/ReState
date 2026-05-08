@@ -3,7 +3,7 @@ import Nav from "@/components/nav/nav";
 
 function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <div>
+        <div className="pb-20 md:pb-0">
             <Nav/>
             {children}
         </div>
