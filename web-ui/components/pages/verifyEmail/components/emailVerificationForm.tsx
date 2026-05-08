@@ -31,7 +31,7 @@ function EmailVerificationForm() {
             await AuthService.verifyOtp(otpValue);
             router.push("/")
         } catch (err) {
-            if (err instanceof ApiError) {
+            if (err instanceof ApiError && !err.isToast) {
                 setError(err.message);
             }
         } finally {

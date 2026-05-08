@@ -4,25 +4,21 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.restate.app.dto.auth.LoginRequest;
-import com.restate.app.dto.auth.RegisterRequest;
-import com.restate.app.dto.auth.RegisterUserRequest;
+import com.restate.app.dto.auth.*;
 import com.restate.app.entity.User;
 import com.restate.app.exception.auth.AuthException;
 import com.restate.app.repository.UserRepo;
 import com.restate.app.utils.OtpUtil;
 import jakarta.annotation.PostConstruct;
-import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Collections;
 
 @Service
@@ -35,6 +31,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final OtpUtil otpUtil;
     private final EmailService emailService;
+    private final StringRedisTemplate redisTemplate;
     @Value("${google.client.id}")
     private String clientId;
 
@@ -77,10 +74,6 @@ public class AuthService {
     public User login(LoginRequest loginRequest) {
         User user = userRepo.findByEmail(loginRequest.email())
                 .orElseThrow(() -> AuthException.invalidCredentials());
-
-        if (user == null) {
-            throw AuthException.invalidCredentials();
-        }
 
         if (user.getPassword() == null) {
             throw AuthException.invalidCredentials();
@@ -140,5 +133,26 @@ public class AuthService {
 
         return userRepo.save(user);
 
+    }
+
+    public void forgetPassword(String email){
+        User user = userRepo.findByEmail(email).orElseThrow(()->AuthException.noUserFound());
+        if (user.getPassword() == null) {
+            throw AuthException.invalidCredentials();
+        }
+        String opt = otpUtil.generateOtp();
+        emailService.ResetPassword(email, opt);
+
+    }
+
+    public void resetPassword(ResetPassword request) {
+        User user = userRepo.findByEmail(request.email()).orElseThrow(()->AuthException.noUserFound());
+        String key = "forgetPass:" + request.email();
+        String validOtp =  redisTemplate.opsForValue().get(key);
+        if(validOtp == null || !validOtp.equals(request.otp())) throw AuthException.otpExpired();
+
+        String hashPassword = passwordEncoder.encode(request.password());
+        user.setPassword(hashPassword);
+        redisTemplate.delete(key);
     }
 }

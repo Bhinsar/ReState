@@ -23,7 +23,11 @@ export interface ApiResponse<T> {
 }
 
 export class ApiError extends Error {
-    constructor(public message: string, public status: number) {
+    constructor(
+        public message: string, 
+        public status: number,
+        public isToast: boolean = false
+    ) {
         super(message);
         this.name = 'ApiError';
     }
@@ -78,11 +82,11 @@ api.interceptors.response.use(
 
         if (!error.response) {
             if (error.code === 'ECONNABORTED') {
-                return toast.error('Request timed out. Please try again.');
-                // return Promise.reject(new ApiError('Request timed out. Please try again.', 408));
+                toast.error('Request timed out. Please try again.');
+                return Promise.reject(new ApiError('Request timed out. Please try again.', 408, true));
             }
-            // return Promise.reject(new ApiError('Network error. Please check your connection.', 0));
-            return toast.error('Network error. Please check your connection.');
+            toast.error('Network error. Please check your connection.');
+            return Promise.reject(new ApiError('Network error. Please check your connection.', 0, true));
         }
 
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -117,8 +121,8 @@ api.interceptors.response.use(
 
         const globalToastErrors = [429, 500, 503];
         if (globalToastErrors.includes(error.response?.status)) {
-            return toast.error(error.response?.data?.message);
-            // return Promise.reject(new ApiError(error.response?.data?.message, error.response?.status));
+            toast.error(error.response?.data?.message);
+            return Promise.reject(new ApiError(error.response?.data?.message, error.response?.status, true));
         }
 
         const message = error.response?.data?.message ?? 'Something went wrong';

@@ -26,3 +26,13 @@ export interface registerUserParams {
     phoneNumber: string,
     dateOfBirth: Date,
 }
+
+export interface forgotPasswordParams {
+    email: string
+}
+
+export interface resetPasswordParams {
+    email: string,
+    otp: string,
+    password: string
+}

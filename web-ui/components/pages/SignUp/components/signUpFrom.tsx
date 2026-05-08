@@ -51,7 +51,7 @@ const SignUpFrom = () => {
             router.push("/verify-email")
             toast.success(`Welcome! ${res.firstName}`);
         } catch (err) {
-            if (err instanceof ApiError) {
+            if (err instanceof ApiError && !err.isToast) {
                 setError(err.message);
             }
         } finally {

@@ -4,7 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -23,6 +23,8 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final StringRedisTemplate redisTemplate;
+    @Value("${project.frontendURL}")
+    private String frontendURL;
 
     private String loadTemplate(String filename) throws IOException {
         ClassPathResource resource = new ClassPathResource("templates/email/" + filename);
@@ -84,9 +86,11 @@ public class EmailService {
             String subject  =  "Reset your password";
 
             String body = loadTemplate("reset-password-otp.html")
-                    .replace("{{otp}}", otp);
+                    .replace("{{otp}}", otp)
+                    .replace("{{link}}", frontendURL+"/reset-password"+toEmail);
 
-
+            String key = "forgetPass:" + toEmail;
+            redisTemplate.opsForValue().set(key, otp, 5, TimeUnit.MINUTES);
             send(toEmail, subject, body);
 
         } catch (Exception e) {

@@ -237,4 +237,16 @@ public class AuthController {
         return ApiResponse.ok(message, data);
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgetPass(@Validated @RequestBody ForgetPass request){
+        authService.forgetPassword(request.email());
+        return ApiResponse.ok("Forget password otp send successfully");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@Validated @RequestBody ResetPassword request){
+        authService.resetPassword(request);
+        return ApiResponse.ok("Password reset successfully");
+    }
+
 }

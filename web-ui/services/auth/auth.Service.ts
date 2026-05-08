@@ -1,4 +1,4 @@
-import {authResponse, loginParams, registerUserParams, signUpParams} from "@/services/auth/auth.Interface";
+import {authResponse, loginParams, registerUserParams, resetPasswordParams, signUpParams} from "@/services/auth/auth.Interface";
 import {ApiEndPont} from "@/services/auth/apiEndponts";
 import {api} from '@/services/api'
 import {useAuthStore} from "@/lib/store/authStore";
@@ -61,6 +61,25 @@ export class AuthService {
             const res = await api.post<authResponse>(ApiEndPont.registerUser, data);
             useAuthStore.getState().setUser(res.data);
             return res.data;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    static async forgotPassword(email: string): Promise<boolean> {
+        try {
+            const res = await api.post(ApiEndPont.forgotPassword, {email});
+            return res.success;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    static async resetPassword(data: resetPasswordParams): Promise<boolean> {
+        try {
+            console.log(data)
+            const res = await api.post(ApiEndPont.resetPassword, data);
+            return res.success;
         } catch (e) {
             throw e;
         }

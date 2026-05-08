@@ -17,6 +17,7 @@ import SubmitButton from "@/components/common/submitButton";
 import {secureStorage} from "@/lib/secureStorage";
 import {useRouter} from "next/navigation";
 import {signIn} from "next-auth/react";
+import Link from 'next/link';
 
 const LoginForm = () => {
     const {control, handleSubmit} = useForm<z.infer<typeof loginSchema>>({
@@ -39,7 +40,7 @@ const LoginForm = () => {
             router.push("/")
             toast.success(`Welcome back! ${res.firstName}`);
         } catch (err) {
-            if (err instanceof ApiError) {
+            if (err instanceof ApiError && !err.isToast) {
                 setError(err.message);
             }
         } finally {
@@ -69,10 +70,10 @@ const LoginForm = () => {
                            label={"Password"} isPassword={true}/>
             </FieldGroup>
             <div className={"relative flex items-center mt-5 "}>
-                <button type="button"
-                        className={"text-brand-accent text-sm absolute right-2 cursor-pointer hover:text-brand-secondary"}>Forget
+                <Link href="/forgot-password"
+                        className={"text-brand-accent text-sm absolute right-2 cursor-pointer hover:text-brand-secondary"}>Forgot
                     Password?
-                </button>
+                </Link>
             </div>
             <div className="flex justify-end gap-2.5 mt-4">
 
