@@ -75,16 +75,21 @@ public class AuthService {
     }
 
     public User login(LoginRequest loginRequest) {
+        User user = userRepo.findByEmail(loginRequest.email())
+                .orElseThrow(() -> AuthException.invalidCredentials());
+
+        if (user == null) {
+            throw AuthException.invalidCredentials();
+        }
+
+        if (user.getPassword() == null) {
+            throw AuthException.invalidCredentials();
+        }
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
         );
 
-        User user = userRepo.findByEmail(loginRequest.email()).orElse(null);
-
-        if (user == null) {
-            throw AuthException.invalidCredentials();
-        }
 
         if (user.getRegistrationStep() == User.RegisterStep.REGISTERED) {
             String otp = otpUtil.generateOtp();

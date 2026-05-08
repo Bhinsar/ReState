@@ -9,7 +9,7 @@ import {LockIcon, MailIcon} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import Image from "next/image";
 import {AuthService} from "@/services/auth/auth.Service";
-import {loginParams} from "@/services/auth/auth.Interface";
+import {authResponse, loginParams} from "@/services/auth/auth.Interface";
 import {ApiError} from "@/services/api";
 import {toast} from "sonner"
 import ErrorMessage from "@/components/common/errorMessage";
@@ -36,8 +36,6 @@ const LoginForm = () => {
             setError(null);
 
             const res = await AuthService.login(data);
-
-            secureStorage.setItem("avatarUrl", res.avatarUrl)
             router.push("/")
             toast.success(`Welcome back! ${res.firstName}`);
         } catch (err) {
@@ -48,6 +46,18 @@ const LoginForm = () => {
             setIsLogin(false);
         }
     }
+
+    const googleLogin = async()=>{
+        try{
+            await signIn("google", { callbackUrl: "/register-user" })
+            
+        } catch (error) {
+            if(error instanceof Error){
+                toast.error(error.message);
+            }
+        }
+    }
+
     return (
         <form onSubmit={handleSubmit(login)}>
             <ErrorMessage error={error} isVisible={!!error}/>
@@ -75,11 +85,11 @@ const LoginForm = () => {
                 </SubmitButton>
                 <SubmitButton
                     type="button"
-                    style="bg-white border-gray-600 hover:bg-gray-100 w-1/2 text-gray-500 text-sm "
+                    style="bg-white border-gray-600 hover:bg-gray-100 w-1/2 text-gray-500 md:text-sm text-xs "
                     image={<Image src={"/images/google.svg"} alt={"googleLogo"} width={20} height={20}
                                   className="object-contain "/>}
                     label={"Continue with Google"}
-                    onClick={() => signIn("google", { callbackUrl: "/register-user" })}
+                    onClick={googleLogin}
                 />
             </div>
 
