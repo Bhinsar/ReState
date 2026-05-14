@@ -5,6 +5,7 @@ import com.restate.app.dto.property.PropertyFilterRequest;
 import com.restate.app.dto.property.PropertyResponse;
 import com.restate.app.dto.property.PropertySummaryResponse;
 import com.restate.app.dto.property.UpdateProperty;
+import com.restate.app.entity.User;
 import com.restate.app.service.PropertyService;
 import com.restate.app.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,17 +15,18 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/properties")
+@RequestMapping("/api/v1/properties")
 @RequiredArgsConstructor
 public class PropertyController {
     private final PropertyService propertyService;
 
-    @PostMapping("/create")
+    @PostMapping()
     public ResponseEntity<ApiResponse<PropertyResponse>> createProperty(
             @Validated @RequestBody CreateProperty request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -44,7 +46,16 @@ public class PropertyController {
             Pageable pageable) {
 
         Page<PropertySummaryResponse> page = propertyService.listProperties(filter, pageable);
+        return ApiResponse.pagedOk("Properties fetched successfully", page, page.getContent());
+    }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<List<PropertySummaryResponse>>> getMyProperties(
+            @AuthenticationPrincipal User user,
+            @ModelAttribute PropertyFilterRequest filter,
+            Pageable pageable) {
+
+        Page<PropertySummaryResponse> page = propertyService.getMyProperties(user.getId(),filter, pageable);
         return ApiResponse.pagedOk("Properties fetched successfully", page, page.getContent());
     }
 

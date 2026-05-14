@@ -15,5 +15,6 @@ public record PropertyFilterRequest(
         BigDecimal minPrice,
         BigDecimal maxPrice,
         Integer minBedrooms,
-        Integer minBathrooms
+        Integer minBathrooms,
+        String search
 ) {}

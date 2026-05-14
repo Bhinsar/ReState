@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -18,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Arrays;
 
 @Component
@@ -26,6 +28,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
     private final UserRepo userRepo;
+    private final RedisTemplate<String, Object> redisObjectTemplate;
     private final HandlerExceptionResolver handlerExceptionResolver;
 
     @Override
@@ -50,14 +53,26 @@ public class JWTAuthFilter extends OncePerRequestFilter {
             String email = jwtService.extractUsername(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                User user = userRepo.findByEmail(email).orElse(null);
+                User user = (User) redisObjectTemplate.opsForValue().get("user_cache:" + email);
 
-                if (user != null && !jwtService.isTokenExpired(token)) {
+                // 2. If not in Redis, fetch from DB and save to Redis
+                if (user == null) {
+                    user = userRepo.findByEmail(email).orElse(null);
+                    if (user != null) {
+                        // Cache for 1 hour to keep it fresh but reduce DB hits
+                        redisObjectTemplate.opsForValue().set("user_cache:" + email, user, Duration.ofHours(1));
+                    }
+                }
+
+                // 3. Validate and Set Security Context
+                if (user != null && user.isEnabled() && !jwtService.isTokenExpired(token)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
+                    // Clear context if user is deleted or token is bad
+                    SecurityContextHolder.clearContext();
                     throw AuthException.tokenExpired();
                 }
             }

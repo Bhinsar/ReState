@@ -3,10 +3,8 @@ package com.restate.app.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import java.time.Instant;
+
 
 @Builder
 @Entity
@@ -20,8 +18,8 @@ public class PropertyImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private String id;
+    @Column(name = "image_id", updatable = false, nullable = false)
+    private String imageId;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -43,16 +41,6 @@ public class PropertyImage {
     @Column(name = "sort_order", nullable = false)
     @Builder.Default
     private int sortOrder = 0;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    private Instant updatedAt;
 
     @PrePersist
     private void validateSortOrder() {

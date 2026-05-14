@@ -38,7 +38,13 @@ public class PropertyService {
     }
 
     public Page<PropertySummaryResponse> listProperties(PropertyFilterRequest filter, Pageable pageable) {
-        Specification<Property> spec = withFilters(filter);
+        Specification<Property> spec = withFilters(filter, false);
+        Page<Property> properties = propertyRepo.findAll(spec, pageable);
+        return properties.map(this::mapToSummaryResponse);
+    }
+
+    public Page<PropertySummaryResponse> getMyProperties(String userId, PropertyFilterRequest filter, Pageable pageable) {
+        Specification<Property> spec = withFilters(filter, true).and((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
         Page<Property> properties = propertyRepo.findAll(spec, pageable);
         return properties.map(this::mapToSummaryResponse);
     }
@@ -74,9 +80,9 @@ public class PropertyService {
 
         boolean hasPrimary = images.stream().anyMatch(PropertyImage::isPrimary);
         if (!hasPrimary) {
-            images.getFirst().setPrimary(true);
+            images.get(0).setPrimary(true);
         }
-
+        imageRepo.saveAll(images);
         createproperty.setImages(images);
 
         return mapToResponse(savedProperty);
@@ -117,11 +123,12 @@ public class PropertyService {
 
         boolean hasPrimary = newImages.stream().anyMatch(PropertyImage::isPrimary);
         if (!hasPrimary && !newImages.isEmpty()) {
-            newImages.getFirst().setPrimary(true);
+            newImages.get(0).setPrimary(true);
         }
 
         property.getImages().addAll(newImages);
 
+        imageRepo.saveAll(newImages);
         Property updatedProperty = propertyRepo.save(property);
         return mapToResponse(updatedProperty);
     }
@@ -138,7 +145,7 @@ public class PropertyService {
         propertyRepo.save(property);
     }
 
-    public Specification<Property> withFilters(PropertyFilterRequest filter) {
+    public Specification<Property> withFilters(PropertyFilterRequest filter, boolean isOwnerView) {
         return (root, query, cb) -> {
 
             List<Predicate> predicates = new ArrayList<>();
@@ -169,10 +176,10 @@ public class PropertyService {
             }
 
             // ── Status — default to AVAILABLE if not provided ─────
-            if (filter.status() != null) {
-                predicates.add(cb.equal(root.get("status"), filter.status()));
-            } else {
-                predicates.add(cb.equal(root.get("status"), PropertyStatus.AVAILABLE));
+            if (isOwnerView) {
+                if (filter.status() != null) {
+                    predicates.add(cb.equal(root.get("status"), filter.status()));
+                }
             }
 
             // ── Price range ───────────────────────────────────────
@@ -191,6 +198,17 @@ public class PropertyService {
             // ── Bathrooms ─────────────────────────────────────────
             if (filter.minBathrooms() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("bathrooms"), filter.minBathrooms()));
+            }
+
+            if (filter.search() != null && !filter.search().isBlank()) {
+                String searchTerm = "%" + filter.search().toLowerCase() + "%";
+
+                Predicate titleMatch = cb.like(cb.lower(root.get("title")), searchTerm);
+                Predicate descriptionMatch = cb.like(cb.lower(root.get("description")), searchTerm);
+
+                Predicate cityMatch = cb.like(cb.lower(addressJoin.get("city")), searchTerm);
+
+                predicates.add(cb.or(titleMatch, descriptionMatch, cityMatch));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -221,7 +239,7 @@ public class PropertyService {
 
         List<PropertyResponse.PropertyImageResponse> imageResponses = property.getImages().stream()
                 .map(img -> new PropertyResponse.PropertyImageResponse(
-                        img.getId(),
+                        img.getImageId(),
                         img.getImageUrl(),
                         img.isPrimary(),
                         img.getSortOrder()))
@@ -250,7 +268,7 @@ public class PropertyService {
                 .filter(PropertyImage::isPrimary)
                 .map(PropertyImage::getImageUrl)
                 .findFirst()
-                .orElse(property.getImages().isEmpty() ? null : property.getImages().getFirst().getImageUrl());
+                .orElse(property.getImages().isEmpty() ? null : property.getImages().get(0).getImageUrl());
 
         String city = property.getAddress() != null ? property.getAddress().getCity() : null;
         String state = property.getAddress() != null ? property.getAddress().getState() : null;

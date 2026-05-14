@@ -15,9 +15,10 @@ public class JWTService {
     @Value("${jwt.secret_key}")
     private String SECRET;
 
-    public String generate(User user, long time){
+    public String generate(User user, long time) {
         return Jwts.builder()
                 .subject(user.getEmail())
+                .claim("id", user.getId())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + time))
                 .signWith(getSigningKey())
