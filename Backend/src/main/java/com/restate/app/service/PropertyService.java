@@ -4,7 +4,6 @@ import jakarta.persistence.criteria.*;
 import com.restate.app.dto.property.*;
 import com.restate.app.entity.Address;
 import com.restate.app.entity.Property;
-import com.restate.app.entity.Property.PropertyStatus;
 import com.restate.app.entity.PropertyImage;
 import com.restate.app.entity.User;
 import com.restate.app.exception.address.AddressException;
@@ -145,7 +144,7 @@ public class PropertyService {
         propertyRepo.save(property);
     }
 
-    public Specification<Property> withFilters(PropertyFilterRequest filter, boolean isOwnerView) {
+    private Specification<Property> withFilters(PropertyFilterRequest filter, boolean isOwnerView) {
         return (root, query, cb) -> {
 
             List<Predicate> predicates = new ArrayList<>();
@@ -209,6 +208,54 @@ public class PropertyService {
                 Predicate cityMatch = cb.like(cb.lower(addressJoin.get("city")), searchTerm);
 
                 predicates.add(cb.or(titleMatch, descriptionMatch, cityMatch));
+            }
+
+            // ── Geo-distance sorting & optional radius filter ─────────
+            if (!isOwnerView && filter.latitude() != null && filter.longitude() != null) {
+                final double EARTH_RADIUS_KM = 6371.0;
+                final double userLat = Math.toRadians(filter.latitude());
+                final double userLon = Math.toRadians(filter.longitude());
+
+                // Haversine: distance = 2R * asin(sqrt(
+                //   sin²((lat2-lat1)/2) + cos(lat1)*cos(lat2)*sin²((lon2-lon1)/2)))
+                Expression<Double> propLatRad = cb.function(
+                        "radians", Double.class, addressJoin.get("latitude").as(Double.class));
+                Expression<Double> propLonRad = cb.function(
+                        "radians", Double.class, addressJoin.get("longitude").as(Double.class));
+
+                Expression<Double> dLat = cb.diff(propLatRad, cb.literal(userLat));
+                Expression<Double> dLon = cb.diff(propLonRad, cb.literal(userLon));
+
+                Expression<Double> sinDLatHalf = cb.function("sin", Double.class,
+                        cb.quot(dLat, cb.literal(2.0)).as(Double.class));
+                Expression<Double> sinDLonHalf = cb.function("sin", Double.class,
+                        cb.quot(dLon, cb.literal(2.0)).as(Double.class));
+
+                Expression<Double> cosUserLat = cb.literal(Math.cos(userLat));
+                Expression<Double> cosPropLat = cb.function("cos", Double.class, propLatRad);
+
+                // a = sin²(dLat/2) + cos(userLat)*cos(propLat)*sin²(dLon/2)
+                Expression<Double> aExpr = cb.sum(
+                        cb.prod(sinDLatHalf, sinDLatHalf),
+                        cb.prod(
+                                cb.prod(cosUserLat, cosPropLat),
+                                cb.prod(sinDLonHalf, sinDLonHalf)
+                        ).as(Double.class)
+                ).as(Double.class);
+
+                Expression<Double> distanceKm = cb.prod(
+                        cb.literal(2.0 * EARTH_RADIUS_KM),
+                        cb.function("asin", Double.class,
+                                cb.function("sqrt", Double.class, aExpr))
+                ).as(Double.class);
+
+                // Optional radius filter
+                if (filter.radiusKm() != null) {
+                    predicates.add(cb.lessThanOrEqualTo(distanceKm, cb.literal(filter.radiusKm())));
+                }
+
+                // Sort nearest-first
+                query.orderBy(cb.asc(distanceKm));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

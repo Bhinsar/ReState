@@ -16,5 +16,9 @@ public record PropertyFilterRequest(
         BigDecimal maxPrice,
         Integer minBedrooms,
         Integer minBathrooms,
-        String search
-) {}
+        String search,
+        Double latitude,
+        Double longitude,
+        Double radiusKm
+) {
+}
