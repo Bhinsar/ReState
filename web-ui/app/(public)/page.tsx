@@ -1,5 +1,6 @@
 import React from 'react';
 import {Metadata} from "next";
+import HomeView from '@/components/pages/home/homeView';
 
 export const metadata: Metadata = {
     title: 'Home',
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
 };
 function Home() {
     return (
-        <div></div>
+        <HomeView />
     );
 }
 

@@ -33,17 +33,19 @@ public class PropertyService {
     public PropertyResponse getPropertyById(String id) {
         Property property = propertyRepo.findById(id)
                 .orElseThrow(() -> PropertyException.noPropertyFound());
+        property.setViewCount(property.getViewCount() + 1);
+        propertyRepo.save(property);
         return mapToResponse(property);
     }
 
-    public Page<PropertySummaryResponse> listProperties(PropertyFilterRequest filter, Pageable pageable) {
-        Specification<Property> spec = withFilters(filter, false);
+    public Page<PropertySummaryResponse> listProperties(PropertyFilterRequest filter, Pageable pageable, boolean isTrending) {
+        Specification<Property> spec = withFilters(filter, false,  isTrending);
         Page<Property> properties = propertyRepo.findAll(spec, pageable);
         return properties.map(this::mapToSummaryResponse);
     }
 
     public Page<PropertySummaryResponse> getMyProperties(String userId, PropertyFilterRequest filter, Pageable pageable) {
-        Specification<Property> spec = withFilters(filter, true).and((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
+        Specification<Property> spec = withFilters(filter, true, false).and((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
         Page<Property> properties = propertyRepo.findAll(spec, pageable);
         return properties.map(this::mapToSummaryResponse);
     }
@@ -144,84 +146,73 @@ public class PropertyService {
         propertyRepo.save(property);
     }
 
-    private Specification<Property> withFilters(PropertyFilterRequest filter, boolean isOwnerView) {
+    private Specification<Property> withFilters(PropertyFilterRequest filter, boolean isOwnerView, boolean isTrending) {
         return (root, query, cb) -> {
 
             List<Predicate> predicates = new ArrayList<>();
+            List<Order> orders = new ArrayList<>();
 
             Join<Object, Object> addressJoin = root.join("address", JoinType.LEFT);
 
             predicates.add(cb.equal(root.get("isDeleted"), false));
 
             if (filter.city() != null && !filter.city().isBlank()) {
-                predicates.add(cb.like(
-                        cb.lower(addressJoin.get("city")),
+                predicates.add(cb.like(cb.lower(addressJoin.get("city")),
                         "%" + filter.city().toLowerCase() + "%"));
             }
 
             if (filter.state() != null && !filter.state().isBlank()) {
-                predicates.add(cb.like(
-                        cb.lower(addressJoin.get("state")),
+                predicates.add(cb.like(cb.lower(addressJoin.get("state")),
                         "%" + filter.state().toLowerCase() + "%"));
             }
-            // ── Property type ─────────────────────────────────────
+
             if (filter.propertyType() != null) {
                 predicates.add(cb.equal(root.get("propertyType"), filter.propertyType()));
             }
 
-            // ── Listing type ──────────────────────────────────────
             if (filter.listingType() != null) {
                 predicates.add(cb.equal(root.get("listingType"), filter.listingType()));
             }
 
-            // ── Status — default to AVAILABLE if not provided ─────
             if (isOwnerView) {
                 if (filter.status() != null) {
                     predicates.add(cb.equal(root.get("status"), filter.status()));
                 }
+            } else {
+                predicates.add(cb.equal(root.get("status"), Property.PropertyStatus.AVAILABLE));
             }
 
-            // ── Price range ───────────────────────────────────────
             if (filter.minPrice() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("price"), filter.minPrice()));
             }
             if (filter.maxPrice() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("price"), filter.maxPrice()));
             }
-
-            // ── Bedrooms ──────────────────────────────────────────
             if (filter.minBedrooms() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("bedrooms"), filter.minBedrooms()));
             }
-
-            // ── Bathrooms ─────────────────────────────────────────
             if (filter.minBathrooms() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("bathrooms"), filter.minBathrooms()));
             }
 
             if (filter.search() != null && !filter.search().isBlank()) {
                 String searchTerm = "%" + filter.search().toLowerCase() + "%";
-
-                Predicate titleMatch = cb.like(cb.lower(root.get("title")), searchTerm);
-                Predicate descriptionMatch = cb.like(cb.lower(root.get("description")), searchTerm);
-
-                Predicate cityMatch = cb.like(cb.lower(addressJoin.get("city")), searchTerm);
-
-                predicates.add(cb.or(titleMatch, descriptionMatch, cityMatch));
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("title")), searchTerm),
+                        cb.like(cb.lower(root.get("description")), searchTerm),
+                        cb.like(cb.lower(addressJoin.get("city")), searchTerm)
+                ));
             }
 
-            // ── Geo-distance sorting & optional radius filter ─────────
             if (!isOwnerView && filter.latitude() != null && filter.longitude() != null) {
                 final double EARTH_RADIUS_KM = 6371.0;
                 final double userLat = Math.toRadians(filter.latitude());
                 final double userLon = Math.toRadians(filter.longitude());
 
-                // Haversine: distance = 2R * asin(sqrt(
-                //   sin²((lat2-lat1)/2) + cos(lat1)*cos(lat2)*sin²((lon2-lon1)/2)))
-                Expression<Double> propLatRad = cb.function(
-                        "radians", Double.class, addressJoin.get("latitude").as(Double.class));
-                Expression<Double> propLonRad = cb.function(
-                        "radians", Double.class, addressJoin.get("longitude").as(Double.class));
+                Expression<Double> propLatRad = cb.function("radians", Double.class,
+                        addressJoin.get("latitude").as(Double.class));
+                Expression<Double> propLonRad = cb.function("radians", Double.class,
+                        addressJoin.get("longitude").as(Double.class));
 
                 Expression<Double> dLat = cb.diff(propLatRad, cb.literal(userLat));
                 Expression<Double> dLon = cb.diff(propLonRad, cb.literal(userLon));
@@ -234,13 +225,10 @@ public class PropertyService {
                 Expression<Double> cosUserLat = cb.literal(Math.cos(userLat));
                 Expression<Double> cosPropLat = cb.function("cos", Double.class, propLatRad);
 
-                // a = sin²(dLat/2) + cos(userLat)*cos(propLat)*sin²(dLon/2)
                 Expression<Double> aExpr = cb.sum(
                         cb.prod(sinDLatHalf, sinDLatHalf),
-                        cb.prod(
-                                cb.prod(cosUserLat, cosPropLat),
-                                cb.prod(sinDLonHalf, sinDLonHalf)
-                        ).as(Double.class)
+                        cb.prod(cb.prod(cosUserLat, cosPropLat),
+                                cb.prod(sinDLonHalf, sinDLonHalf)).as(Double.class)
                 ).as(Double.class);
 
                 Expression<Double> distanceKm = cb.prod(
@@ -249,13 +237,26 @@ public class PropertyService {
                                 cb.function("sqrt", Double.class, aExpr))
                 ).as(Double.class);
 
-                // Optional radius filter
                 if (filter.radiusKm() != null) {
                     predicates.add(cb.lessThanOrEqualTo(distanceKm, cb.literal(filter.radiusKm())));
                 }
 
-                // Sort nearest-first
-                query.orderBy(cb.asc(distanceKm));
+                orders.add(cb.asc(distanceKm));
+            }
+
+            if (isTrending) {
+                orders.add(cb.desc(root.get("viewCount")));
+            }
+
+            orders.add(cb.desc(root.get("createdAt")));
+
+            // ✅ Guard: skip orderBy and distinct on COUNT queries
+            boolean isCountQuery = Long.class.equals(query.getResultType())
+                    || long.class.equals(query.getResultType());
+
+            if (!isCountQuery) {
+                query.distinct(true);
+                query.orderBy(orders);
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

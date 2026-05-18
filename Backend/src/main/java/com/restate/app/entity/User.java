@@ -83,7 +83,7 @@ public class User implements UserDetails {
 
     @Builder.Default
     @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
+    private Boolean isDeleted = false;
 
     @Builder.Default
     @Enumerated(EnumType.STRING) // Ensures enum changes don't break existing DB data

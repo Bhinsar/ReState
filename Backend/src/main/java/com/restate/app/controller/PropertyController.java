@@ -34,6 +34,15 @@ public class PropertyController {
         return ApiResponse.created(res);
     }
 
+    @GetMapping("/trending")
+    public ResponseEntity<ApiResponse<List<PropertySummaryResponse>>> listTrendingProperties(
+            @ModelAttribute PropertyFilterRequest filter,
+            Pageable pageable) {
+
+        Page<PropertySummaryResponse> page = propertyService.listProperties(filter, pageable,  true);
+        return ApiResponse.pagedOk("Properties fetched successfully", page, page.getContent());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PropertyResponse>> getPropertyById(@PathVariable String id) {
         PropertyResponse res = propertyService.getPropertyById(id);
@@ -45,9 +54,10 @@ public class PropertyController {
             @ModelAttribute PropertyFilterRequest filter,
             Pageable pageable) {
 
-        Page<PropertySummaryResponse> page = propertyService.listProperties(filter, pageable);
+        Page<PropertySummaryResponse> page = propertyService.listProperties(filter, pageable, false);
         return ApiResponse.pagedOk("Properties fetched successfully", page, page.getContent());
     }
+
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<List<PropertySummaryResponse>>> getMyProperties(

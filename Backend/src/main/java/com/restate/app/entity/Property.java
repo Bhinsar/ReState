@@ -107,6 +107,10 @@ public class Property {
             columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant updatedAt;
 
+    @Builder.Default
+    @Column(name = "view_count")
+    private Long viewCount = 0L;
+
 
     public enum PropertyType {
         HOUSE, APARTMENT, CONDO, VILLA, PLOT, COMMERCIAL

@@ -54,7 +54,6 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 User user = (User) redisObjectTemplate.opsForValue().get("user_cache:" + email);
-
                 // 2. If not in Redis, fetch from DB and save to Redis
                 if (user == null) {
                     user = userRepo.findByEmail(email).orElse(null);
@@ -79,10 +78,8 @@ public class JWTAuthFilter extends OncePerRequestFilter {
         } catch (Exception e) {
 //            logger.error("JWT processing error:"+e);
             SecurityContextHolder.clearContext();
-
-            // Let your GlobalExceptionHandler handle it via resolver
             handlerExceptionResolver.resolveException(request, response, null, e);
-            return;   // Important: stop the chain
+            return;
         }
 
         filterChain.doFilter(request, response);

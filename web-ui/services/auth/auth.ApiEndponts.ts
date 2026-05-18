@@ -1,4 +1,4 @@
-export const ApiEndPont= {
+export const authApiEndPont= {
     login:"/auth/login",
     register:"/auth/register",
     resendOtp: "/otp/resend-otp",

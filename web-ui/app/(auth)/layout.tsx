@@ -7,7 +7,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full">
       {/* Left Side: Logo (50%) */}
-      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-gradient-to-br from-brand-primary to-brand-secondary p-12 min-h-screen">
+      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-linear-to-br from-brand-primary to-brand-secondary p-12 min-h-screen">
         <div className="w-full max-w-75">
           <AspectRatio ratio={1 / 1}>
             <Image

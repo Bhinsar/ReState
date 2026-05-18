@@ -8,9 +8,7 @@ public record PageMeta(
         long totalElements,
         int totalPages,
         boolean hasNext,
-        boolean hasPrevious,
-        boolean isFirst,
-        boolean isLast
+        boolean hasPrevious
 ) {
     public static PageMeta of(Page<?> page) {
         return new PageMeta(
@@ -19,9 +17,7 @@ public record PageMeta(
                 page.getTotalElements(),
                 page.getTotalPages(),
                 page.hasNext(),
-                page.hasPrevious(),
-                page.isFirst(),
-                page.isLast()
+                page.hasPrevious()
         );
     }
 }

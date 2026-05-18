@@ -1,6 +1,7 @@
 package com.restate.app.exception;
 
 import com.restate.app.utils.ApiResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -67,6 +69,11 @@ public class GlobalExceptionHandler {
                 ? nrf.getResourcePath()
                 : "unknown";
         return ApiResponse.notFound("Route not found: " + path);
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ApiResponse<Void>> handleExpiredJwt(ExpiredJwtException ex) {
+        return ApiResponse.unauthorized("Expired JWT Token");
     }
 
     // Safety net for anything unexpected
