@@ -23,15 +23,16 @@ public record PropertyResponse(
         Instant updatedAt,
         PropertyOwnerResponse owner,
         PropertyAddressResponse address,
-        List<PropertyImageResponse> images
+        List<PropertyImageResponse> images,
+        Long viewCount
 ) {
     public record PropertyOwnerResponse(
             String id,
             String firstName,
             String lastName,
             String email,
-            String avatarUrl,
-            String phoneNumber
+            String avatarUrl
+//            String phoneNumber
     ) {}
 
     public record PropertyAddressResponse(

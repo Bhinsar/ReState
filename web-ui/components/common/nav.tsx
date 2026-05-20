@@ -143,6 +143,14 @@ function Nav() {
                                                 <Settings className="w-4 h-4 transition-transform group-hover:scale-110" />
                                                 Settings
                                             </Link>
+                                            <Link 
+                                                href="/my-properties" 
+                                                className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
+                                                onClick={() => setIsDropdownOpen(false)}
+                                            >
+                                                <Settings className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                                My Properties
+                                            </Link>
                                         </div>
 
                                         <div className="p-2 border-t border-gray-50">

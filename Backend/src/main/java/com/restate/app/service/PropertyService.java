@@ -233,7 +233,7 @@ public class PropertyService {
 
                 Expression<Double> distanceKm = cb.prod(
                         cb.literal(2.0 * EARTH_RADIUS_KM),
-                        cb.function("asin", Double.class,
+                        cb.function("assign", Double.class,
                                 cb.function("sqrt", Double.class, aExpr))
                 ).as(Double.class);
 
@@ -266,8 +266,7 @@ public class PropertyService {
                 property.getOwner().getFirstName(),
                 property.getOwner().getLastName(),
                 property.getOwner().getEmail(),
-                property.getOwner().getAvatarUrl(),
-                property.getOwner().getPhoneNumber());
+                property.getOwner().getAvatarUrl());
 
         PropertyResponse.PropertyAddressResponse addressResponse = new PropertyResponse.PropertyAddressResponse(
                 property.getAddress().getAddressId(),
@@ -305,7 +304,8 @@ public class PropertyService {
                 property.getUpdatedAt(),
                 ownerResponse,
                 addressResponse,
-                imageResponses);
+                imageResponses,
+                property.getViewCount());
     }
 
     private PropertySummaryResponse mapToSummaryResponse(Property property) {

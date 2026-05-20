@@ -26,9 +26,9 @@ export default function PropertyAgent({ owner }: { owner: ownerResponse }) {
                     <Phone className="w-5 h-5" />
                     {owner.phoneNumber}
                 </a> */}
-                <a href={`mailto:${owner.email}`} className="flex items-center justify-center gap-2 w-full py-3 bg-brand-secondary hover:bg-brand-secondary/90 text-white rounded-xl font-semibold transition-colors">
+                <a href={"#"} className="flex items-center justify-center gap-2 w-full py-3 bg-brand-secondary hover:bg-brand-secondary/90 text-white rounded-xl font-semibold transition-colors">
                     <Mail className="w-5 h-5" />
-                    Apply for a request
+                    I'm Interested
                 </a>
             </div>
         </div>

@@ -3,7 +3,7 @@ import { passwordSchema } from "../login/loginSchema";
 
 export const resetPasswordSchema = z.object({
     password: passwordSchema,
-    confirmPassword: z.string().min(1, "Confirm password is required")
+    confirmPassword: z.string().nonempty("Confirm password is required")
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],

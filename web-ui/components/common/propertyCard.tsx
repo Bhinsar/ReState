@@ -1,11 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
 import { PropertySummaryResponse, ListingType, PropertyStatus } from '@/services/properties/properties.Interface';
-import { MapPin, Bed, Bath, Maximize } from 'lucide-react';
+import { MapPin, Bed, Bath, Maximize, Edit, Delete } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface PropertyCardProps {
     property: PropertySummaryResponse;
+    forOwner?: boolean;
 }
 
 const getStatusColor = (status: PropertyStatus | string) => {
@@ -19,7 +21,7 @@ const getStatusColor = (status: PropertyStatus | string) => {
     }
 };
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property }: { property: PropertySummaryResponse }) => {
+export const PropertyCard: React.FC<PropertyCardProps> = ({ property, forOwner = false }: { property: PropertySummaryResponse, forOwner?: boolean }) => {
     const router = useRouter();
     const {
         propertyId,
@@ -46,7 +48,24 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }: { proper
 
     return (
         <div onClick={() => router.push(`/properties/${propertyId}`)} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] cursor-pointer flex flex-col relative border border-black/5 font-sans group hover:-translate-y-1.5">
-            <div className="relative w-full h-[220px] overflow-hidden">
+            <div className="relative w-full h-55 overflow-hidden">
+                {forOwner && (
+                    <div className="absolute top-3 right-3 z-20">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.1)] transition-transform duration-200 hover:-translate-y-0.5 border border-white/20 ${statusClass}`}>
+                            <Link 
+                                href={`/my-properties/manage/${propertyId}`} 
+                                className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
+                            >
+                                <Edit/>
+                            </Link>
+                            <button
+                                className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
+                            >
+                                <Delete/>
+                            </button>
+                        </span>
+                    </div>
+                )}
                 {primaryImageUrl ? (
                     <Image
                         src={primaryImageUrl}

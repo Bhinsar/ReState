@@ -1,5 +1,5 @@
 import React from 'react';
-import Nav from "@/components/nav/nav";
+import Nav from "@/components/common/nav";
 import Footer from "@/components/common/footer";
 
 function Layout({ children }: { children: React.ReactNode }) {

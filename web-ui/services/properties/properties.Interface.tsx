@@ -1,3 +1,5 @@
+import { addressResponse as PropertyAddressResponse } from "../addresses/address.interface";
+
 export enum PropertyType {
     COMMERCIAL = 'COMMERCIAL',
     PLOT = 'PLOT',
@@ -63,19 +65,6 @@ export interface ownerResponse {
     avatarUrl: string
 }
 
-export interface PropertyAddressResponse {
-    addressId: string;
-    address: string;
-    plotNumber?: string;
-    floor?: string;
-    landmark?: string;
-    city: string;
-    state: string;
-    country: string;
-    pinCode: string;
-    latitude: number;
-    longitude: number;
-}
 
 export interface PropertyImageResponse {
     imageId: string;
@@ -100,4 +89,19 @@ export interface PropertyResponse {
     owner: ownerResponse
     address: PropertyAddressResponse
     images: PropertyImageResponse[];
+    viewCount: number;
+}
+
+export interface PropertyUpdate {
+    title:string;
+    description:string;
+    price:number;
+    propertyType:PropertyType;
+    listingType:ListingType;
+    status:PropertyStatus;
+    bedrooms:number;
+    bathrooms:number;
+    areaSqft:number;
+    addressId:string;
+    images:PropertyImageResponse[];
 }
