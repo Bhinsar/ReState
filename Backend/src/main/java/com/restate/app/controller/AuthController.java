@@ -238,9 +238,17 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgetPass(@Validated @RequestBody ForgetPass request){
+    public ResponseEntity<ApiResponse<String>> forgetPass(@Validated @RequestBody ForgotPass request){
         authService.forgetPassword(request.email());
         return ApiResponse.ok("Forget password otp send successfully");
+    }
+
+    @PostMapping("/reset-link")
+    public ResponseEntity<ApiResponse<Boolean>> resetPassLink(@Validated @RequestBody ForgotPassLink link) {
+        if(authService.confirmResetLink(link.token())) {
+            return ApiResponse.ok(true);
+        }
+        return ApiResponse.unauthorized("Expired link");
     }
 
     @PostMapping("/reset-password")

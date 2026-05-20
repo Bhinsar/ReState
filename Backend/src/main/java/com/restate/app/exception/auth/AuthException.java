@@ -35,6 +35,8 @@ public class AuthException extends AppException {
     public static AuthException invalidToken() {
             return new AuthException(HttpStatus.BAD_REQUEST, "Invalid Google token");
         }
-
+    public  static AuthException invalidTokenExpired() {
+        return new AuthException(HttpStatus.UNAUTHORIZED, "Expired Link");
+    }
 
 }

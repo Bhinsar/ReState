@@ -237,9 +237,6 @@ public class PropertyService {
                                 cb.function("sqrt", Double.class, aExpr))
                 ).as(Double.class);
 
-                if (filter.radiusKm() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(distanceKm, cb.literal(filter.radiusKm())));
-                }
 
                 orders.add(cb.asc(distanceKm));
             }
@@ -255,7 +252,7 @@ public class PropertyService {
                     || long.class.equals(query.getResultType());
 
             if (!isCountQuery) {
-                query.distinct(true);
+                // query.distinct(true); // Causes Postgres error when ordering by computed distance
                 query.orderBy(orders);
             }
 

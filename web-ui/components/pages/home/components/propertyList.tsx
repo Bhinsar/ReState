@@ -5,14 +5,19 @@ import { useGetProperty } from '@/hooks/useProperty';
 import { Info } from 'lucide-react';
 import React from 'react'
 import Titles from './titles';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 function PropertyList() {
+    const { latitude, longitude } = useGeolocation();
     const {
         data,
-        isFetching,
         isLoading,
         error,
-    } = useGetProperty(4);
+    } = useGetProperty({
+        size: 4,
+        latitude,
+        longitude
+    });
     
     if (isLoading) {
         return (

@@ -81,16 +81,15 @@ public class EmailService {
         }
     }
     @Async
-    public void ResetPassword(String toEmail, String otp) {
+    public void ResetPassword(String toEmail, String token) {
         try {
             String subject  =  "Reset your password";
 
             String body = loadTemplate("reset-password-otp.html")
-                    .replace("{{otp}}", otp)
-                    .replace("{{link}}", frontendURL+"/reset-password"+toEmail);
+                    .replace("{{link}}", frontendURL+"/reset-password/"+token);
 
             String key = "forgetPass:" + toEmail;
-            redisTemplate.opsForValue().set(key, otp, 5, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(key, token, 60, TimeUnit.MINUTES);
             send(toEmail, subject, body);
 
         } catch (Exception e) {

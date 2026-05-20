@@ -1,17 +1,10 @@
 package com.restate.app.dto.auth;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record ResetPassword(
-        @NotBlank(message = "Email is required")
-        @Email(message = "Please provide a valid email")
-        String email,
-
-        @NotBlank(message = "OTP is required")
-        String otp,
+        @NotNull(message = "Reset Password link is required")
+        String token,
 
         @NotBlank(message = "Password is required")
         @Size(min=8, max=20, message = "Password must be between 6 and 20 characters")

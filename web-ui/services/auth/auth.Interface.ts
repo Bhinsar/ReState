@@ -4,6 +4,7 @@ export interface loginParams {
 }
 
 export interface authResponse {
+    id: string
     firstName: string,
     lastName: string,
     email: string,
@@ -32,7 +33,6 @@ export interface forgotPasswordParams {
 }
 
 export interface resetPasswordParams {
-    email: string,
-    otp: string,
+    token: string,
     password: string
 }

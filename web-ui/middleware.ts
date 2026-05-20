@@ -8,7 +8,7 @@ enum RegisterStep {
 }
 
 const STEP_COOKIE = "step";
-const PUBLIC_ROUTES = ["/", "/explore"];
+const PUBLIC_ROUTES = ["/", "/explore", "/properties"];
 const AUTH_ROUTES = ["/login", "/sign-up", "/forgot-password", "/reset-password"];
 const VERIFY_ROUTE = "/verify-email";
 const REGISTER_ROUTE = "/register-user";

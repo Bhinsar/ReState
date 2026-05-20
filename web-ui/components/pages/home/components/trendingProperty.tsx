@@ -1,4 +1,5 @@
 import { useGetTrendingProperty } from '@/hooks/useProperty';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import React from 'react'
 import Titles from './titles'
 import ErrorIcons from '@/components/common/errorIcons';
@@ -6,12 +7,17 @@ import Loading from '@/components/common/loading';
 import PropertyCard from '@/components/common/propertyCard';
 
 function TrendingProperty() {
+    const { latitude, longitude } = useGeolocation();
     const {
         data,
         isFetching,
         isLoading,
         error,
-    } = useGetTrendingProperty(8);
+    } = useGetTrendingProperty({
+        size: 8,
+        latitude,
+        longitude
+    });
   return (
     <section className='py-10 md:py-14 lg:py-16'>
             <div className='max-w-8xl mx-auto px-4 sm:px-6 lg:px-8'>

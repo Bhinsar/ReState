@@ -35,3 +35,69 @@ export interface PropertySummaryResponse {
     city: string;
     state: string;
 }
+
+export interface PropertyFilterRequest {
+    size: number;
+    page: number;
+    city?: string;
+    state?: string;
+    propertyType?: PropertyType;
+    listingType?: ListingType;
+    propertyStatus?: PropertyStatus;
+    minPrice?: number;
+    maxPrice?: number;
+    minBedrooms?: number;
+    minBathrooms?: number;
+    search?: string;
+    latitude?: number;
+    longitude?: number;
+    radiusKm?: number;
+}
+
+export interface ownerResponse {
+    id: string
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
+    avatarUrl: string
+}
+
+export interface PropertyAddressResponse {
+    addressId: string;
+    address: string;
+    plotNumber?: string;
+    floor?: string;
+    landmark?: string;
+    city: string;
+    state: string;
+    country: string;
+    pinCode: string;
+    latitude: number;
+    longitude: number;
+}
+
+export interface PropertyImageResponse {
+    imageId: string;
+    imageUrl: string;
+    isPrimary: boolean;
+    sortOrder: number;
+}
+
+export interface PropertyResponse {
+    propertyId: string;
+    title: string;
+    description: string;
+    price: number;
+    propertyType: PropertyType;
+    listingType: ListingType;
+    status: PropertyStatus;
+    bedrooms: number;
+    bathrooms: number;
+    areaSqft: number;
+    createdAt: string;
+    updatedAt: string;
+    owner: ownerResponse
+    address: PropertyAddressResponse
+    images: PropertyImageResponse[];
+}

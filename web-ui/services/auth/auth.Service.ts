@@ -75,6 +75,15 @@ export class AuthService {
         }
     }
 
+    static async resetPasswordLink(token: string): Promise<boolean> {
+        try {
+            const res = await api.get(`/auth/reset-password/${token}`);
+            return res.success;
+        } catch (e) {
+            return false;
+        }
+    }
+
     static async resetPassword(data: resetPasswordParams): Promise<boolean> {
         try {
             console.log(data)

@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { PropertySummaryResponse, ListingType, PropertyStatus } from '@/services/properties/properties.Interface';
 import { MapPin, Bed, Bath, Maximize } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface PropertyCardProps {
     property: PropertySummaryResponse;
@@ -19,7 +20,9 @@ const getStatusColor = (status: PropertyStatus | string) => {
 };
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }: { property: PropertySummaryResponse }) => {
+    const router = useRouter();
     const {
+        propertyId,
         primaryImageUrl,
         title,
         price,
@@ -42,7 +45,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }: { proper
     const statusClass = getStatusColor(status);
 
     return (
-        <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] cursor-pointer flex flex-col relative border border-black/5 font-sans group hover:-translate-y-1.5">
+        <div onClick={() => router.push(`/properties/${propertyId}`)} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] cursor-pointer flex flex-col relative border border-black/5 font-sans group hover:-translate-y-1.5">
             <div className="relative w-full h-[220px] overflow-hidden">
                 {primaryImageUrl ? (
                     <Image
@@ -51,6 +54,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }: { proper
                         fill
                         className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        loading='lazy'
                     />
                 ) : (
                     <div className="w-full h-full bg-linear-to-br from-[#f5f7fa] to-[#c3cfe2]" />

@@ -18,7 +18,6 @@ public record PropertyFilterRequest(
         Integer minBathrooms,
         String search,
         Double latitude,
-        Double longitude,
-        Double radiusKm
+        Double longitude
 ) {
 }

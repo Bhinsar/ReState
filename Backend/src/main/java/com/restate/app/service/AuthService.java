@@ -18,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
@@ -32,6 +33,7 @@ public class AuthService {
     private final OtpUtil otpUtil;
     private final EmailService emailService;
     private final StringRedisTemplate redisTemplate;
+    private final JWTService  jwtService;
     @Value("${google.client.id}")
     private String clientId;
 
@@ -140,19 +142,33 @@ public class AuthService {
         if (user.getPassword() == null) {
             throw AuthException.invalidCredentials();
         }
-        String opt = otpUtil.generateOtp();
-        emailService.ResetPassword(email, opt);
+        String token = jwtService.generate(user,60);
+        emailService.ResetPassword(email, token);
 
     }
 
+    public boolean confirmResetLink(String token ){
+        String email= jwtService.extractUsername(token);
+        String key = "forgetPass:" + email;
+        String storedToken = redisTemplate.opsForValue().get(key);
+        if(storedToken == null) throw AuthException.invalidTokenExpired();
+        return  token.equals(storedToken);
+    }
+
     public void resetPassword(ResetPassword request) {
-        User user = userRepo.findByEmail(request.email()).orElseThrow(()->AuthException.noUserFound());
-        String key = "forgetPass:" + request.email();
-        String validOtp =  redisTemplate.opsForValue().get(key);
-        if(validOtp == null || !validOtp.equals(request.otp())) throw AuthException.otpExpired();
+        String email= jwtService.extractUsername(request.token());
+        String key = "forgetPass:" + email;
+        String storedToken = redisTemplate.opsForValue().get(key);
+        if(!request.token().equals(storedToken)){
+           throw AuthException.invalidTokenExpired();
+        }
+
+        User user = userRepo.findByEmail(email).orElseThrow(()->AuthException.noUserFound());
 
         String hashPassword = passwordEncoder.encode(request.password());
         user.setPassword(hashPassword);
+        userRepo.save(user);
         redisTemplate.delete(key);
+
     }
 }

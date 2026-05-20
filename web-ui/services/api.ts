@@ -5,8 +5,8 @@ import {AuthService} from "@/services/auth/auth.Service";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface PageMeta {
-    page: number;
-    size: number;
+    currentPage: number;
+    pageSize: number;
     totalElements: number;
     totalPages: number;
     hasNext: boolean;

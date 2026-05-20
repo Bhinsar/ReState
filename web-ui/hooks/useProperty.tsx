@@ -1,14 +1,15 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { PropertyService } from "@/services/properties/properties.Service";
+import { PropertyFilterRequest } from "@/services/properties/properties.Interface";
 
-export const useGetProperty = (limit: number) => {
+export const useGetProperty = (filter: Omit<PropertyFilterRequest, 'page'>) => {
     return useInfiniteQuery({
-        queryKey: ['properties'],
+        queryKey: ['properties', filter],
         initialPageParam: 0,
-        queryFn: ({pageParam} : {pageParam: number}) => PropertyService.getAllProperties(pageParam, limit),
+        queryFn: ({pageParam} : {pageParam: number}) => PropertyService.getAllProperties({ ...filter, page: pageParam }),
         getNextPageParam: (lastPage) => {
             if (lastPage.pagination?.hasNext) {
-                return lastPage.pagination.page + 1;
+                return lastPage.pagination.currentPage + 1;
             }
             return undefined;
         }
@@ -16,16 +17,25 @@ export const useGetProperty = (limit: number) => {
 }
 
 
-export const useGetTrendingProperty = (limit: number) => {
+export const useGetTrendingProperty = (filter: Omit<PropertyFilterRequest, 'page'>) => {
     return  useInfiniteQuery({
-        queryKey: ['trending-properties'],
+        queryKey: ['trending-properties', filter],
         initialPageParam: 0,
-        queryFn: ({pageParam} : {pageParam: number}) => PropertyService.getTrendingProperties(pageParam, limit),
+        queryFn: ({pageParam} : {pageParam: number}) => PropertyService.getTrendingProperties({ ...filter, page: pageParam }),
         getNextPageParam: (lastPage) => {
             if (lastPage.pagination?.hasNext) {
-                return lastPage.pagination.page + 1;
+                return lastPage.pagination.currentPage + 1;
             }
             return undefined;
         }
     });
 }
+
+
+export const useGetPropertyById = (propertyId: string) => {
+    return useQuery({
+        queryKey: ['property', propertyId],
+        queryFn: () => PropertyService.getPropertyById(propertyId),
+    });
+}
+

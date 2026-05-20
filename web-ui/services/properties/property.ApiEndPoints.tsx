@@ -1,6 +1,6 @@
 export enum propertyApiEndPoints {
     GET_ALL_PROPERTIES = '/properties',
-    GET_PROPERTY_BY_ID = '/properties/{id}',
+    GET_PROPERTY_BY_ID = '/properties',
     CREATE_PROPERTY = '/properties',
     UPDATE_PROPERTY = '/properties/{id}',
     DELETE_PROPERTY = '/properties/{id}',    
