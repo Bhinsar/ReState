@@ -15,7 +15,7 @@ import {
     ListingType,
     PropertyStatus,
 } from '@/services/properties/properties.Interface';
-import { useOwnerProperties} from '@/hooks/useProperty';
+import { useOwnerProperties, useOwnerMetrics } from '@/hooks/useProperty';
 import PropertyModal from './components/PropertyModal';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
 import HeroHeader from './components/HeroHeader';
@@ -62,16 +62,14 @@ function MyPropertiesView() {
         refetch,
     } = useOwnerProperties(queryFilter);
 
+    const {
+        data: metrics,
+        isLoading: isMetricsLoading,
+    } = useOwnerMetrics();
+
     // ── Flatten pages ─────────────────────────────────────────────────────────
     const allProperties = data?.pages.flatMap((page) => page.data) ?? [];
     const totalCount = data?.pages[0]?.pagination?.totalElements ?? 0;
-
-    // ── Stats ─────────────────────────────────────────────────────────────────
-    const available = allProperties.filter(p => p.status === PropertyStatus.AVAILABLE).length;
-    const soldOrRented = allProperties.filter(p =>
-        p.status === PropertyStatus.SOLD || p.status === PropertyStatus.RENTED
-    ).length;
-    const drafts = allProperties.filter(p => p.status === PropertyStatus.DRAFT).length;
 
     // ── Handlers ──────────────────────────────────────────────────────────────
     const handleEdit =async (summary: PropertySummaryResponse) => {
@@ -117,11 +115,11 @@ function MyPropertiesView() {
             <div className="min-h-screen bg-slate-50">
                 {/* ── Hero Header ─────────────────────────────────────────────── */}
                 <HeroHeader
-                    totalCount={totalCount}
-                    available={available}
-                    soldOrRented={soldOrRented}
-                    drafts={drafts}
-                    isLoading={isLoading}
+                    totalCount={metrics?.totalListing ?? 0}
+                    available={metrics?.available ?? 0}
+                    soldOrRented={(metrics?.sold ?? 0) + (metrics?.rented ?? 0)}
+                    drafts={metrics?.draft ?? 0}
+                    isLoading={isLoading || isMetricsLoading}
                     setIsCreateOpen={setIsCreateOpen}
                 />
 

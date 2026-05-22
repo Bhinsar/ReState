@@ -1,12 +1,17 @@
 import React from 'react';
 import { PropertyResponse } from '@/services/properties/properties.Interface';
-import { MapPin } from 'lucide-react';
+import { MapPin, Eye } from 'lucide-react';
 
-export default function PropertyHeader({ property }: { property: PropertyResponse }) {
+interface PropertyHeaderProps {
+    property: PropertyResponse;
+    isOwner?: boolean;
+}
+
+export default function PropertyHeader({ property, isOwner = false }: PropertyHeaderProps) {
     return (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
             <div>
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center flex-wrap gap-3 mb-3">
                     <span className="px-3 py-1 bg-brand-primary/20 text-brand-secondary rounded-full text-sm font-semibold tracking-wide uppercase">
                         {property.listingType}
                     </span>
@@ -15,6 +20,12 @@ export default function PropertyHeader({ property }: { property: PropertyRespons
                     }`}>
                         {property.status}
                     </span>
+                    {isOwner && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-sm font-semibold">
+                            <Eye className="w-3.5 h-3.5" />
+                            {property.viewCount.toLocaleString()} {property.viewCount === 1 ? 'view' : 'views'}
+                        </span>
+                    )}
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{property.title}</h1>
                 <p className="flex items-center text-slate-500 text-lg">

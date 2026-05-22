@@ -112,3 +112,10 @@ export interface PropertyUpdate {
     addressId:string;
     images:PropertyImageRequest[];
 }
+export interface PropertyMetricsResponse {
+    totalListing: number;
+    available: number;
+    rented: number;
+    sold: number;
+    draft: number;
+}

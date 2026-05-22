@@ -334,4 +334,8 @@ public class PropertyService {
                 state,
                 primaryImageUrl);
     }
+
+    public PropertyMetrics getMyMatrics(String id) {
+        return propertyRepo.findMetricsByUserId(id);
+    }
 }

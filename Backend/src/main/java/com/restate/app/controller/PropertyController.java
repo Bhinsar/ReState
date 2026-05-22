@@ -1,10 +1,6 @@
 package com.restate.app.controller;
 
-import com.restate.app.dto.property.CreateProperty;
-import com.restate.app.dto.property.PropertyFilterRequest;
-import com.restate.app.dto.property.PropertyResponse;
-import com.restate.app.dto.property.PropertySummaryResponse;
-import com.restate.app.dto.property.UpdateProperty;
+import com.restate.app.dto.property.*;
 import com.restate.app.entity.User;
 import com.restate.app.service.PropertyService;
 import com.restate.app.utils.ApiResponse;
@@ -69,6 +65,13 @@ public class PropertyController {
         Page<PropertySummaryResponse> page = propertyService.getMyProperties(user.getId(),filter, pageable);
         return ApiResponse.pagedOk("Properties fetched successfully", page, page.getContent());
     }
+
+    @GetMapping("/me/metrics")
+    public ResponseEntity<ApiResponse<PropertyMetrics>> getMyMatrics(@AuthenticationPrincipal User user){
+        PropertyMetrics metrics = propertyService.getMyMatrics(user.getId());
+        return ApiResponse.ok(metrics);
+    }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PropertyResponse>> updateProperty(

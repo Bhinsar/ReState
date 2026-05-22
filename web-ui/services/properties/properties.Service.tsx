@@ -1,4 +1,4 @@
-import {PropertyFilterRequest, PropertySummaryResponse, PropertyResponse, PropertyUpdate} from "@/services/properties/properties.Interface";
+import {PropertyFilterRequest, PropertySummaryResponse, PropertyResponse, PropertyUpdate, PropertyMetricsResponse} from "@/services/properties/properties.Interface";
 import {api, ApiResponse} from "@/services/api";
 import {propertyApiEndPoints} from "@/services/properties/property.ApiEndPoints";
 
@@ -62,6 +62,15 @@ export class PropertyService {
     static async createProperty(data: PropertyUpdate): Promise<PropertyResponse> {
         try {
             const res = await api.post<PropertyResponse>(`${propertyApiEndPoints.CREATE_PROPERTY}`, data);
+            return res.data;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    static async getOwnerMetrics(): Promise<PropertyMetricsResponse> {
+        try {
+            const res = await api.get<PropertyMetricsResponse>(propertyApiEndPoints.GET_MY_METRICS);
             return res.data;
         } catch (e) {
             throw e;

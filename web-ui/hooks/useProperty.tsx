@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyService } from "@/services/properties/properties.Service";
-import { PropertyFilterRequest, PropertyUpdate } from "@/services/properties/properties.Interface";
+import { PropertyFilterRequest, PropertyUpdate, PropertyMetricsResponse } from "@/services/properties/properties.Interface";
 import { toast } from "sonner";
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
@@ -63,6 +63,13 @@ export const useOwnerProperties = (filter: Omit<PropertyFilterRequest, 'page'>) 
             }
             return undefined;
         },
+    });
+};
+
+export const useOwnerMetrics = () => {
+    return useQuery<PropertyMetricsResponse, Error>({
+        queryKey: [...propertyKeys.owner, 'metrics'] as const,
+        queryFn: () => PropertyService.getOwnerMetrics(),
     });
 };
 

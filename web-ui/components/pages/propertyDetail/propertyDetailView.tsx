@@ -106,7 +106,7 @@ function PropertyDetailView({ id }: { id: string }) {
           </div>
         )}
         <PropertyGallery images={response.images} />
-        <PropertyHeader property={response} />
+        <PropertyHeader property={response} isOwner={isOwer} />
 
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-2/3">

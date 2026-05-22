@@ -6,5 +6,5 @@ export enum propertyApiEndPoints {
     DELETE_PROPERTY = '/properties/{id}',    
     GET_PROPERTIES_BY_USER = '/properties/me',    
     GET_TRENDING_PROPERTIES = '/properties/trending',
-    
+    GET_MY_METRICS = '/properties/me/metrics',
 }

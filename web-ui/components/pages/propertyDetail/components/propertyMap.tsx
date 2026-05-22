@@ -1,6 +1,7 @@
 import React from 'react';
 import { addressResponse } from '@/services/addresses/address.interface';
 import { MapPin } from 'lucide-react';
+import Map from '@/components/common/map';
 
 export default function PropertyMap({ address }: { address: addressResponse }) {
     return (
@@ -12,10 +13,11 @@ export default function PropertyMap({ address }: { address: addressResponse }) {
             </p>
             
             {/* Map Placeholder */}
-            <div className="w-full h-[400px] bg-slate-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300">
-                <MapPin className="w-12 h-12 text-slate-400 mb-3" />
+            <div className="w-full h-100 bg-slate-50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300">
+                {/* <MapPin className="w-12 h-12 text-slate-400 mb-3" />
                 <p className="text-slate-500 font-medium text-lg">Interactive Map will be integrated here</p>
-                <p className="text-sm text-slate-400 mt-2">Lat: {address.latitude}, Lng: {address.longitude}</p>
+                <p className="text-sm text-slate-400 mt-2">Lat: {address.latitude}, Lng: {address.longitude}</p> */}
+                <Map lat={address.latitude} lng={address.longitude} />
             </div>
         </div>
     );
