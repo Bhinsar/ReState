@@ -92,6 +92,13 @@ export interface PropertyResponse {
     viewCount: number;
 }
 
+export interface PropertyImageRequest {
+    imageId?: string;
+    imageUrl: string;
+    isPrimary: boolean;
+    sortOrder: number;
+}
+
 export interface PropertyUpdate {
     title:string;
     description:string;
@@ -103,5 +110,5 @@ export interface PropertyUpdate {
     bathrooms:number;
     areaSqft:number;
     addressId:string;
-    images:PropertyImageResponse[];
+    images:PropertyImageRequest[];
 }

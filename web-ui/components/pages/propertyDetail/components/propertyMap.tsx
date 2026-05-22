@@ -1,8 +1,8 @@
 import React from 'react';
-import { PropertyAddressResponse } from '@/services/properties/properties.Interface';
+import { addressResponse } from '@/services/addresses/address.interface';
 import { MapPin } from 'lucide-react';
 
-export default function PropertyMap({ address }: { address: PropertyAddressResponse }) {
+export default function PropertyMap({ address }: { address: addressResponse }) {
     return (
         <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 mb-8">
             <h3 className="text-xl font-bold text-slate-900 mb-6">Location</h3>

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/properties")
+@Slf4j
 @RequiredArgsConstructor
 public class PropertyController {
     private final PropertyService propertyService;
@@ -64,7 +66,6 @@ public class PropertyController {
             @AuthenticationPrincipal User user,
             @ModelAttribute PropertyFilterRequest filter,
             Pageable pageable) {
-
         Page<PropertySummaryResponse> page = propertyService.getMyProperties(user.getId(),filter, pageable);
         return ApiResponse.pagedOk("Properties fetched successfully", page, page.getContent());
     }

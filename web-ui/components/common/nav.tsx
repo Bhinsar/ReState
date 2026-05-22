@@ -6,7 +6,7 @@ import { NavItem } from "@/data/navItems";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { CircleUser, LogIn, LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { CircleUser, LogIn, LogOut, User, Settings, ChevronDown, List } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -99,7 +99,7 @@ function Nav() {
                             <div className="ml-4 relative" ref={dropdownRef}>
                                 <button
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all duration-200 group"
+                                    className="flex cursor-pointer items-center gap-2 p-1 pr-3 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all duration-200 group"
                                 >
                                     {user?.avatarUrl ? (
                                         <Image src={user?.avatarUrl} alt="Profile" width={32} height={32} className="rounded-full" />
@@ -148,7 +148,7 @@ function Nav() {
                                                 className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                                                 onClick={() => setIsDropdownOpen(false)}
                                             >
-                                                <Settings className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                                <List className="w-4 h-4 transition-transform group-hover:scale-110" />
                                                 My Properties
                                             </Link>
                                         </div>

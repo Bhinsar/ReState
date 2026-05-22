@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 type SelectOption = {
   label: string;
@@ -29,9 +30,12 @@ interface FormInputProps<T extends FieldValues> {
   isPassword?: boolean;
   placeholder?: string;
   length?: number;
-  // Select-specific props
-  type?: "text" | "select";
+  type?: "text" | "select" | "date" | "datetime-local" | "number" | "textarea";
   options?: SelectOption[];
+  currentValue?: string;
+  maxValue?: string;
+  isReadOnly?: boolean;
+  required?: boolean;
 }
 
 function FormInput<T extends FieldValues>({
@@ -47,6 +51,10 @@ function FormInput<T extends FieldValues>({
   length,
   type = "text",
   options = [],
+  currentValue,
+  maxValue,
+  isReadOnly = false,
+  required = false,
 }: FormInputProps<T>) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -59,7 +67,7 @@ function FormInput<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <Field className="w-full">
           {label && (
-            <FieldLabel className="text-md font-medium">{label}</FieldLabel>
+            <FieldLabel required={required} className="text-md font-medium">{label}</FieldLabel>
           )}
 
           {type === "select" ? (
@@ -71,7 +79,7 @@ function FormInput<T extends FieldValues>({
             >
               <SelectTrigger
                 className={cn(
-                  "rounded-full shadow-none border-2 transition-all w-full bg-white h-11 px-4 py-5",
+                  "rounded-md shadow-none border-2  transition-all w-full bg-white h-11 px-4 py-5",
                   "focus:ring-0 focus:ring-offset-0",
                   fieldState.invalid
                     ? "border-red-500 focus:border-red-600"
@@ -90,8 +98,27 @@ function FormInput<T extends FieldValues>({
                 ))}
               </SelectContent>
             </Select>
+          ) : type === "textarea" ? (
+            <Textarea
+              {...field}
+              disabled={isDisabled}
+              readOnly={isReadOnly}
+              placeholder={placeholder || label || name}
+              maxLength={length}
+              className={cn(
+                "rounded-md shadow-none border-2 transition-all w-full h-20",
+                "focus-visible:ring-0 focus-visible:ring-offset-0",
+                startIcon ? "pl-10" : "pl-4",
+                endIcon || isPassword ? "pr-12" : "pr-4",
+                fieldState.invalid
+                  ? "border-red-500 focus:border-red-600 focus-visible:border-red-600"
+                  : "border-gray-300 focus:border-primary focus-visible:border-primary",
+                isDisabled && "opacity-50 cursor-not-allowed",
+                style,
+              )}
+            />
           ) : (
-            // ── Text / Password variant ──────────────────────────────
+            // ── Text / Password variant/ date ──────────────────────────────
             <div className="relative flex flex-col w-full gap-1">
               <div className="relative flex items-center w-full">
                 {startIcon && (
@@ -101,14 +128,43 @@ function FormInput<T extends FieldValues>({
                 )}
                 <Input
                   {...field}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (type === "number" && val !== "") {
+                      val = val.replace(/^(-?)0+(?=\d)/, '$1');
+                    }
+                    field.onChange(val);
+                  }}
                   disabled={isDisabled}
+                  readOnly={isReadOnly}
                   type={
-                    isPassword ? (showPassword ? "text" : "password") : "text"
+                    isPassword
+                      ? showPassword
+                        ? "text"
+                        : "password"
+                      : type
+                  }
+                  step={type === "number" ? "any" : undefined}
+                  value={(() => {
+                    const raw: unknown = field.value ?? currentValue ?? "";
+                    if (raw instanceof Date) {
+                      return new Date(raw.getTime() - raw.getTimezoneOffset() * 60000)
+                        .toISOString()
+                        .slice(0, 16);
+                    }
+                    return raw as string | number | readonly string[];
+                  })()}
+                  max={
+                    type === "date"
+                      ? maxValue || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]
+                      : type === "datetime-local"
+                      ? maxValue || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+                      : undefined
                   }
                   placeholder={placeholder || label || name}
                   maxLength={length}
                   className={cn(
-                    "rounded-full shadow-none border-2 transition-all w-full bg-white h-11",
+                    "rounded-md shadow-none border-2 transition-all w-full bg-white h-11",
                     "focus-visible:ring-0 focus-visible:ring-offset-0",
                     startIcon ? "pl-10" : "pl-4",
                     endIcon || isPassword ? "pr-12" : "pr-4",

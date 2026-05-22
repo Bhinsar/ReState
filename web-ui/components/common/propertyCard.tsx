@@ -1,13 +1,15 @@
 import React from 'react';
 import Image from 'next/image';
 import { PropertySummaryResponse, ListingType, PropertyStatus } from '@/services/properties/properties.Interface';
-import { MapPin, Bed, Bath, Maximize, Edit, Delete } from 'lucide-react';
+import { MapPin, Bed, Bath, Maximize, Edit, Delete, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface PropertyCardProps {
     property: PropertySummaryResponse;
     forOwner?: boolean;
+    onEdit?: (property: PropertySummaryResponse) => void;
+    onDelete?: (property: PropertySummaryResponse) => void;
 }
 
 const getStatusColor = (status: PropertyStatus | string) => {
@@ -21,7 +23,7 @@ const getStatusColor = (status: PropertyStatus | string) => {
     }
 };
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property, forOwner = false }: { property: PropertySummaryResponse, forOwner?: boolean }) => {
+export const PropertyCard: React.FC<PropertyCardProps> = ({ property, forOwner = false,onEdit,onDelete }: PropertyCardProps) => {
     const router = useRouter();
     const {
         propertyId,
@@ -51,17 +53,18 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, forOwner =
             <div className="relative w-full h-55 overflow-hidden">
                 {forOwner && (
                     <div className="absolute top-3 right-3 z-20">
-                        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.1)] transition-transform duration-200 hover:-translate-y-0.5 border border-white/20 ${statusClass}`}>
-                            <Link 
-                                href={`/my-properties/manage/${propertyId}`} 
-                                className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
+                        <span className={`flex px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.1)] transition-transform duration-200 hover:-translate-y-0.5 border border-white/20 `}>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onEdit?.(property) }}
+                                className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-white hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                             >
-                                <Edit/>
-                            </Link>
+                                <Edit className="w-3.5 h-3.5" />
+                            </button>
                             <button
-                                className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
+                                onClick={(e) => { e.stopPropagation(); onDelete?.(property) }}
+                                className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
                             >
-                                <Delete/>
+                                <Trash2 className="w-3.5 h-3.5" />
                             </button>
                         </span>
                     </div>

@@ -14,6 +14,7 @@ import com.restate.app.repository.PropertyImageRepo;
 import com.restate.app.repository.PropertyRepo;
 import com.restate.app.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -45,7 +46,7 @@ public class PropertyService {
     }
 
     public Page<PropertySummaryResponse> getMyProperties(String userId, PropertyFilterRequest filter, Pageable pageable) {
-        Specification<Property> spec = withFilters(filter, true, false).and((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
+        Specification<Property> spec = withFilters(filter, true, false).and((root, query, cb) -> cb.equal(root.get("owner").get("id"), userId));
         Page<Property> properties = propertyRepo.findAll(spec, pageable);
         return properties.map(this::mapToSummaryResponse);
     }
