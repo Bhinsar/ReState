@@ -154,8 +154,10 @@ public class PropertyService {
             List<Order> orders = new ArrayList<>();
 
             Join<Object, Object> addressJoin = root.join("address", JoinType.LEFT);
+            Join<Object, Object> ownerJoin = root.join("owner", JoinType.LEFT);
 
             predicates.add(cb.equal(root.get("isDeleted"), false));
+            predicates.add(cb.equal(ownerJoin.get("isDeleted"),false));
 
             if (filter.city() != null && !filter.city().isBlank()) {
                 predicates.add(cb.like(cb.lower(addressJoin.get("city")),
@@ -234,7 +236,7 @@ public class PropertyService {
 
                 Expression<Double> distanceKm = cb.prod(
                         cb.literal(2.0 * EARTH_RADIUS_KM),
-                        cb.function("assign", Double.class,
+                        cb.function("asin", Double.class,
                                 cb.function("sqrt", Double.class, aExpr))
                 ).as(Double.class);
 

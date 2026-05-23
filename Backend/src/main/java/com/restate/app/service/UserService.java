@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,16 @@ public class UserService {
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, Object> redisObjectTemplate;
+
+    /**
+     * Evicts the user from the Redis cache so that the next request re-fetches
+     * fresh data from the DB. Must be called after any operation that mutates the
+     * User entity.
+     */
+    private void evictUserCache(User user) {
+        redisObjectTemplate.delete("user_cache:" + user.getEmail());
+    }
 
     public UserResponse getMe(User user) {
         return UserResponse.from(user);
@@ -51,6 +62,7 @@ public class UserService {
         }
 
         User savedUser = userRepo.save(user);
+        evictUserCache(savedUser); // Invalidate stale cache so next request gets fresh DB data
         return UserResponse.from(savedUser);
     }
 
@@ -63,6 +75,7 @@ public class UserService {
         user.setIsDeleted(true);
         user.setDeletedAt(Instant.now());
         userRepo.save(user);
+        evictUserCache(user); // Invalidate cache on soft-delete
     }
 
     public void changePassword(User user, ChangePasswordRequest request) {
@@ -79,5 +92,6 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepo.save(user);
+        evictUserCache(user); // Invalidate cache on password change
     }
 }

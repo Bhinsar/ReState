@@ -7,6 +7,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.restate.app.dto.auth.*;
 import com.restate.app.entity.User;
 import com.restate.app.exception.auth.AuthException;
+import com.restate.app.exception.user.UserException;
 import com.restate.app.repository.UserRepo;
 import com.restate.app.utils.OtpUtil;
 import jakarta.annotation.PostConstruct;
@@ -77,6 +78,10 @@ public class AuthService {
         User user = userRepo.findByEmail(loginRequest.email())
                 .orElseThrow(() -> AuthException.invalidCredentials());
 
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw UserException.alreadyDeleted();
+        }
+
         if (user.getPassword() == null) {
             throw AuthException.invalidCredentials();
         }
@@ -105,6 +110,9 @@ public class AuthService {
         User exitedUser = userRepo.findByEmail(email).orElse(null);
 
         if (exitedUser != null) {
+            if (Boolean.TRUE.equals(exitedUser.getIsDeleted())) {
+                throw UserException.alreadyDeleted();
+            }
             return exitedUser;
         }
 

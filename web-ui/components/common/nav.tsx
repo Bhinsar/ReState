@@ -135,14 +135,14 @@ function Nav() {
                                                 <User className="w-4 h-4 transition-transform group-hover:scale-110" />
                                                 My Profile
                                             </Link>
-                                            <Link 
+                                            {/* <Link 
                                                 href="/settings" 
                                                 className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                                                 onClick={() => setIsDropdownOpen(false)}
                                             >
                                                 <Settings className="w-4 h-4 transition-transform group-hover:scale-110" />
                                                 Settings
-                                            </Link>
+                                            </Link> */}
                                             <Link 
                                                 href="/my-properties" 
                                                 className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
@@ -156,7 +156,7 @@ function Nav() {
                                         <div className="p-2 border-t border-gray-50">
                                             <button
                                                 onClick={handleLogout}
-                                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
+                                                className="cursor-pointer w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
                                             >
                                                 <LogOut className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                                                 Logout

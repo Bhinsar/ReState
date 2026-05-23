@@ -9,7 +9,12 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 
 import com.restate.app.dto.user.ChangePasswordRequest;
 import com.restate.app.dto.user.UpdateUserRequest;
@@ -24,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-@Slf4j
 public class UserController {
 
     private final UserService userService;
@@ -46,8 +50,42 @@ public class UserController {
 
    
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<Void>> deleteMe(@AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<Void>> deleteMe(
+            @AuthenticationPrincipal User user,
+            @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType,
+            HttpServletResponse response) {
         userService.deleteMe(user);
+
+        if (!"mobile".equals(clientType)) {
+            ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/")
+                    .maxAge(0)
+                    .build();
+
+            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/")
+                    .maxAge(0)
+                    .build();
+
+            ResponseCookie stepCookie = ResponseCookie.from("step", "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("Strict")
+                    .path("/")
+                    .maxAge(0)
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
+        }
+
         return ApiResponse.ok("Account deleted successfully");
     }
 

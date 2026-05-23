@@ -1,6 +1,7 @@
 import React from 'react';
 import { Metadata } from "next";
 import LoginView from "@/components/pages/login/loginView";
+import Loading from '@/components/common/loading';
 
 export const metadata: Metadata = {
     title: "Login",
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
 
 export default function Login() {
     return (
-        <LoginView/>
+        <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loading /></div>}>
+            <LoginView/>
+        </React.Suspense>
     );
 }

@@ -1,9 +1,9 @@
 package com.restate.app.dto.user;
 
-import com.restate.app.entity.User;
-
 import java.time.Instant;
 import java.util.Date;
+
+import com.restate.app.entity.User;
 
 public record UserResponse(
         String id,

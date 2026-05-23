@@ -1,11 +1,6 @@
 import {NextResponse} from "next/server";
 import type {NextRequest} from "next/server";
-
-enum RegisterStep {
-    GMAIL = "GMAIL",
-    REGISTERED = "REGISTERED",
-    EMAIL_VERIFIED = "EMAIL_VERIFIED",
-}
+import { RegisterStep } from "./services/users/user.Interface";
 
 const STEP_COOKIE = "step";
 const PUBLIC_ROUTES = ["/", "/explore", "/properties"];
@@ -17,6 +12,13 @@ export async function middleware(request: NextRequest) {
     const {pathname} = request.nextUrl;
     const token = request.cookies.get("accessToken")?.value;
     const step = request.cookies.get(STEP_COOKIE)?.value as RegisterStep | undefined;
+
+    // Prevent browser bfcache from restoring protected pages after logout
+    const noStore = () => {
+        const res = NextResponse.next();
+        res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return res;
+    };
 
     const isGmailUser = step === RegisterStep.GMAIL;
     const isRegisteredNotVerified = step === RegisterStep.REGISTERED;
@@ -55,7 +57,7 @@ export async function middleware(request: NextRequest) {
         if (isAuthRoute || isRegisterRoute || isVerifyRoute) {
             return NextResponse.redirect(new URL("/", request.url));
         }
-        return NextResponse.next();
+        return noStore();
     }
 
     // ── 3. TOKEN EXISTS BUT NO STEP COOKIE YET ───────────────────────────────
@@ -63,7 +65,7 @@ export async function middleware(request: NextRequest) {
     // Only block auth routes, let everything else through.
     if (isAuthRoute) return NextResponse.redirect(new URL("/", request.url));
 
-    return NextResponse.next();
+    return noStore();
 }
 
 export const config = {

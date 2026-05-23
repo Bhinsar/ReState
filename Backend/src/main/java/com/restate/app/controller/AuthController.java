@@ -3,6 +3,7 @@ package com.restate.app.controller;
 import com.restate.app.dto.auth.*;
 import com.restate.app.entity.User;
 import com.restate.app.exception.auth.AuthException;
+import com.restate.app.exception.user.UserException;
 import com.restate.app.repository.UserRepo;
 import com.restate.app.service.AuthService;
 import com.restate.app.service.JWTService;
@@ -149,6 +150,10 @@ public class AuthController {
 
         User user = userRepo.findByEmail(email)
                 .orElseThrow(AuthException::tokenExpired);
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw UserException.alreadyDeleted();
+        }
 
         // Generate new tokens
         String newAccessToken = jwtService.generate(user, 1000L * 60 * 60 * 24);

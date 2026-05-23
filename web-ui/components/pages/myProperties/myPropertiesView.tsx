@@ -139,11 +139,11 @@ function MyPropertiesView() {
                     selectCls={selectCls}
                 />
                 {/* ── Content ──────────────────────────────────────────────────── */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-2 py-8">
+                <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 py-8">
 
                     {/* Loading skeleton */}
                     {isLoading && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4  gap-5">
                             {Array.from({ length: 8 }).map((_, i) => (
                                 <div key={i} className="rounded-2xl bg-white border border-slate-100 overflow-hidden animate-pulse">
                                     <div className="h-48 bg-slate-100" />
@@ -217,7 +217,7 @@ function MyPropertiesView() {
                     {/* Property Grid */}
                     {!isLoading && allProperties.length > 0 && (
                         <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mx-4">
                                 {allProperties.map((property) => (
                                     <PropertyCard
                                         key={property.propertyId}
