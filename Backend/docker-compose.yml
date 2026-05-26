@@ -79,6 +79,7 @@ services:
       CLOUD_SECRET: ${CLOUD_SECRET}
 
       # Firebase
+      FIREBASE_CONFIG_JSON: ${FIREBASE_CONFIG_JSON}
       VAPID-KEY: ${VAPID_KEY}
 
       # JVM tuning (optional, adjust to your server RAM)
