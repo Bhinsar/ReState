@@ -1,21 +1,17 @@
 # ─────────────────────────────────────────────
-# Stage 1 – Build the JAR
+# Stage 1 – Build the JAR (Using a native Maven image)
 # ─────────────────────────────────────────────
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM maven:3.9.6-eclipse-temurin-17-alpine AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper + pom first (layer-cache friendly)
-COPY mvnw mvnw.cmd ./
-COPY .mvn .mvn
+# Copy the pom.xml to download dependencies first (good for layer caching)
 COPY pom.xml ./
+RUN mvn dependency:go-offline -B
 
-# Download all dependencies (cached unless pom.xml changes)
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
-
-# Copy source code and build the fat JAR, skipping tests
+# Copy the actual source code and build the fat JAR
 COPY src src
-RUN ./mvnw package -DskipTests -B
+RUN mvn package -DskipTests -B
 
 # ─────────────────────────────────────────────
 # Stage 2 – Lean runtime image
@@ -27,11 +23,8 @@ WORKDIR /app
 # Non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
 
-# Copy the built JAR from builder stage
+# Copy the built JAR from the builder stage
 COPY --from=builder /app/target/*.jar app.jar
-
-# The failing COPY line has been removed. 
-# The file will now be generated dynamically on boot using the environment variable.
 
 USER spring
 
