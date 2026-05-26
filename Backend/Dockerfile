@@ -30,11 +30,12 @@ RUN addgroup -S spring && adduser -S spring -G spring
 # Copy the built JAR from builder stage
 COPY --from=builder /app/target/*.jar app.jar
 
-# Firebase service account key (if used at runtime)
-COPY src/main/resources/firebase-service-account.json firebase-service-account.json
+# The failing COPY line has been removed. 
+# The file will now be generated dynamically on boot using the environment variable.
 
 USER spring
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Writes the environment variable to a file right before running the JAR
+ENTRYPOINT ["sh", "-c", "echo \"$FIREBASE_CONFIG_JSON\" > firebase-service-account.json && java -jar app.jar"]
