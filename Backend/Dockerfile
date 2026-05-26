@@ -26,6 +26,11 @@ RUN addgroup -S spring && adduser -S spring -G spring
 # Copy the built JAR from the builder stage
 COPY --from=builder /app/target/*.jar app.jar
 
+# FIX: Give the 'spring' user ownership of the /app directory 
+# so it has permission to create files at runtime
+RUN chown -R spring:spring /app
+
+# Now switch to the secure, non-root user
 USER spring
 
 EXPOSE 8080
