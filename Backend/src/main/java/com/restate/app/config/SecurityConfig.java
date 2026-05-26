@@ -33,6 +33,8 @@ public class SecurityConfig {
     private final UserRepo userRepo;
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final RateLimitFilter rateLimitFilter;
+
+    // Automatically injects the clean CorsConfigurationSource bean from CorsConfig.java
     private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
@@ -41,25 +43,28 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Permits browser background validation checks instantly on production
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/me").hasRole("USER")
+                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
+
+                        // Handles fallback authority names if the "ROLE_" prefix is absent in your JWT
+                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/me").hasAnyAuthority("USER", "ROLE_USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthFilter,   RateLimitFilter.class)
+                .addFilterBefore(jwtAuthFilter, RateLimitFilter.class)
                 .exceptionHandling(ex ->
                         ex
-                            .accessDeniedHandler((request, response, e) -> {
-                                 handlerExceptionResolver.resolveException(request, response, null, e);
-                            })
-                            .authenticationEntryPoint((request, response, e) -> {
-                                handlerExceptionResolver.resolveException(request, response, null, e);
-                            })
-                )
-        ;
+                                .accessDeniedHandler((request, response, e) -> {
+                                    handlerExceptionResolver.resolveException(request, response, null, e);
+                                })
+                                .authenticationEntryPoint((request, response, e) -> {
+                                    handlerExceptionResolver.resolveException(request, response, null, e);
+                                })
+                );
 
         return http.build();
     }
@@ -87,5 +92,4 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-
 }
