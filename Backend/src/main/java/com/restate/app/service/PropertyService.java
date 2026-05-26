@@ -13,6 +13,10 @@ import com.restate.app.repository.AddressRepo;
 import com.restate.app.repository.PropertyImageRepo;
 import com.restate.app.repository.PropertyRepo;
 import com.restate.app.repository.UserRepo;
+import com.restate.app.repository.NotificationRepo;
+import com.restate.app.entity.Notification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,6 +34,7 @@ public class PropertyService {
     private final AddressRepo addressRepo;
     private final PropertyRepo propertyRepo;
     private final UserRepo userRepo;
+    private final NotificationRepo notificationRepo;
 
     public PropertyResponse getPropertyById(String id) {
         Property property = propertyRepo.findById(id)
@@ -292,6 +297,16 @@ public class PropertyService {
                         img.getSortOrder()))
                 .toList();
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Boolean isInterested = false;
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User currentUser) {
+            isInterested = notificationRepo.existsByPropertyIdAndSenderIdAndType(
+                    property.getPropertyId(),
+                    currentUser.getId(),
+                    Notification.NotificationType.PROPERTY_INTEREST
+            );
+        }
+
         return new PropertyResponse(
                 property.getPropertyId(),
                 property.getTitle(),
@@ -308,7 +323,8 @@ public class PropertyService {
                 ownerResponse,
                 addressResponse,
                 imageResponses,
-                property.getViewCount());
+                property.getViewCount(),
+                isInterested);
     }
 
     private PropertySummaryResponse mapToSummaryResponse(Property property) {

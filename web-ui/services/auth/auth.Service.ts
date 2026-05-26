@@ -2,11 +2,13 @@ import { authResponse, loginParams, registerUserParams, resetPasswordParams, sig
 import { authApiEndPont } from "@/services/auth/auth.ApiEndponts";
 import { api } from '@/services/api'
 import { useAuthStore } from "@/lib/store/authStore";
+import { registerFCMToken, unRegisterFCMToken } from "../fcm/fcm.Service";
 
 export class AuthService {
     static async login(data: loginParams): Promise<authResponse> {
         try {
             const res = await api.post<authResponse>(authApiEndPont.login, data)
+            await registerFCMToken()
             useAuthStore.getState().setUser(res.data);
             return res.data;
         } catch (e) {
@@ -17,6 +19,7 @@ export class AuthService {
     static async signUp(data: signUpParams): Promise<authResponse> {
         try {
             const res = await api.post<authResponse>(authApiEndPont.register, data)
+            await registerFCMToken()
             useAuthStore.getState().setUser(res.data);
             return res.data;
         } catch (e) {
@@ -49,6 +52,7 @@ export class AuthService {
 
     static async logout(): Promise<void> {
         try {
+            await unRegisterFCMToken()
             await api.post(authApiEndPont.logout)
             useAuthStore.getState().clearUser();
         } catch (e) {

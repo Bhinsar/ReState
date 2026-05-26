@@ -1,8 +1,11 @@
 package com.restate.app.controller;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.restate.app.dto.property.*;
 import com.restate.app.entity.User;
+import com.restate.app.service.NotificationService;
 import com.restate.app.service.PropertyService;
+import com.restate.app.service.UserDeviceService;
 import com.restate.app.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PropertyController {
     private final PropertyService propertyService;
+    private final NotificationService notificationService;
 
     @PostMapping()
     public ResponseEntity<ApiResponse<PropertyResponse>> createProperty(
@@ -87,5 +91,15 @@ public class PropertyController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         propertyService.deleteProperty(id, email);
         return ApiResponse.ok(null);
+    }
+
+    @PostMapping("/{propertyId}/interest")
+    public ResponseEntity<ApiResponse<Void>> expressInterest(
+            @PathVariable String propertyId,
+            @AuthenticationPrincipal User user) throws FirebaseMessagingException {
+
+        notificationService.notifyPropertyInterset(propertyId, user);
+
+        return ApiResponse.ok("Interest expressed");
     }
 }

@@ -24,7 +24,8 @@ public record PropertyResponse(
         PropertyOwnerResponse owner,
         PropertyAddressResponse address,
         List<PropertyImageResponse> images,
-        Long viewCount
+        Long viewCount,
+        Boolean isInterested
 ) {
     public record PropertyOwnerResponse(
             String id,

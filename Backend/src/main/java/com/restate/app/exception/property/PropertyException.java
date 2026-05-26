@@ -15,4 +15,8 @@ public class PropertyException extends AuthException {
     public static PropertyException unauthorized() {
         return new PropertyException(HttpStatus.UNAUTHORIZED, "Unauthorized to update this property");
     }
+
+    public static PropertyException alreadyExpressedInterest() {
+        return new PropertyException(HttpStatus.BAD_REQUEST, "You have already expressed interest in this property");
+    }
 }

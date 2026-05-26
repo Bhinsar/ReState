@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +24,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class JWTAuthFilter extends OncePerRequestFilter {
 
@@ -37,7 +39,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
-//        logger.info("req url: " + requestURI);
+        log.info("req url: " + requestURI);
 
         String token = extractToken(request);
 

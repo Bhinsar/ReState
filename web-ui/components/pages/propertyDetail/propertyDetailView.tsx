@@ -116,7 +116,7 @@ function PropertyDetailView({ id }: { id: string }) {
           </div>
 
           <div className="lg:w-1/3">
-            <PropertyAgent owner={response.owner} isOwer={isOwer} />
+            <PropertyAgent owner={response.owner} isOwer={isOwer} propertyId={response.propertyId} isInterested={response.isInterested} />
           </div>
         </div>
         <SimilarProperties property={response} />

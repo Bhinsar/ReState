@@ -90,6 +90,7 @@ export interface PropertyResponse {
     address: PropertyAddressResponse
     images: PropertyImageResponse[];
     viewCount: number;
+    isInterested: boolean;
 }
 
 export interface PropertyImageRequest {

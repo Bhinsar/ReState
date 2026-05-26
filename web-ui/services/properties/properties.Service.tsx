@@ -76,4 +76,13 @@ export class PropertyService {
             throw e;
         }
     }
+
+    static async interestedProperties(propertyId: string): Promise<PropertyResponse> {
+        try {
+            const res = await api.post<PropertyResponse>(`${propertyApiEndPoints.INTERESTED_PROPERTIES.replace('{id}', propertyId)}`);
+            return res.data;
+        } catch (e) {
+            throw e;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.restate.app.exception;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.restate.app.utils.ApiResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.core.Ordered;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
 
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -82,6 +85,10 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);
         return ApiResponse.internalError("Something went wrong");
     }
-
+    @ExceptionHandler(FirebaseMessagingException.class)
+    public ResponseEntity<ApiResponse<Void>> handleFirebaseMessagingException(Exception ex) {
+        log.error("FirebaseMessagingException exception: {}", ex.getMessage(), ex);
+        return ApiResponse.internalError(ex.getMessage());
+    }
 
 }

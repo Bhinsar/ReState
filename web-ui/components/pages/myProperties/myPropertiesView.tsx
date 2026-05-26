@@ -99,6 +99,7 @@ function MyPropertiesView() {
                 address: { addressId: '', address: summary.city, city: summary.city, state: summary.state, country: '', pinCode: '', latitude: 0, longitude: 0 },
                 images: [],
                 viewCount: 0,
+                isInterested: false,
             });
             setIsEditOpen(true);
         }

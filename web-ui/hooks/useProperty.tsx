@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyService } from "@/services/properties/properties.Service";
-import { PropertyFilterRequest, PropertyUpdate, PropertyMetricsResponse } from "@/services/properties/properties.Interface";
+import { PropertyFilterRequest, PropertyUpdate, PropertyMetricsResponse, PropertyResponse } from "@/services/properties/properties.Interface";
 import { toast } from "sonner";
+
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
 export const propertyKeys = {
@@ -120,3 +121,41 @@ export const useDeleteProperty = () => {
         },
     });
 };
+
+export const useInterestedProperty = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (propertyId: string) => PropertyService.interestedProperties(propertyId),
+        onMutate: async (propertyId: string) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: propertyKeys.detail(propertyId) });
+
+            // Snapshot the previous value
+            const previousProperty = queryClient.getQueryData<PropertyResponse>(propertyKeys.detail(propertyId));
+
+            // Optimistically update to the new value
+            if (previousProperty) {
+                queryClient.setQueryData<PropertyResponse>(propertyKeys.detail(propertyId), {
+                    ...previousProperty,
+                    isInterested: true,
+                });
+            }
+
+            // Return a context object with the snapshotted value
+            return { previousProperty };
+        },
+        onError: (error: Error, propertyId: string, context) => {
+            // Rollback on error
+            if (context?.previousProperty) {
+                queryClient.setQueryData<PropertyResponse>(propertyKeys.detail(propertyId), context.previousProperty);
+            }
+            toast.error(error.message ?? "Failed to register interest.");
+        },
+        onSuccess: (_, propertyId: string) => {
+            queryClient.invalidateQueries({ queryKey: propertyKeys.all });
+            queryClient.invalidateQueries({ queryKey: propertyKeys.trending });
+        },
+    });
+};
+
+

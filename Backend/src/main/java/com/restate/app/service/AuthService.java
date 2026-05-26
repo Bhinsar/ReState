@@ -45,7 +45,6 @@ public class AuthService {
         this.verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(), GsonFactory.getDefaultInstance()
         ).setAudience(Collections.singletonList(clientId)).build();
-        log.info("GoogleIdTokenVerifier initialized with clientId: {}", clientId);
     }
 
     public User register(RegisterRequest registerRequest) {
@@ -101,7 +100,6 @@ public class AuthService {
 
     public User googleLogin(String idTokenStr) throws Exception {
         GoogleIdToken idToken = verifier.verify(idTokenStr);
-        log.info(idTokenStr);
         if (idToken == null) throw AuthException.invalidToken();
         GoogleIdToken.Payload payload = idToken.getPayload();
         String email = payload.getEmail();
