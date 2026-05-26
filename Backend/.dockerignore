@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE / editor
+.idea
+.vscode
+*.iml
+
+# Maven build output
+target/
+
+# Logs
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets — never bake these into the image
+.env
+*.env
+
+# Test reports
+**/surefire-reports/
