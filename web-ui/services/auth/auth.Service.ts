@@ -56,7 +56,7 @@ export class AuthService {
             await api.post(authApiEndPont.logout)
             // Clear httpOnly cookies that were set by the Next.js server (frontend domain).
             // The Spring Boot backend cannot clear these — only the Next.js server can.
-            await fetch("/api/auth/clear-cookies", { method: "POST" });
+            // await fetch("/api/auth/clear-cookies", { method: "POST" });
             useAuthStore.getState().clearUser();
         } catch (e) {
             throw e

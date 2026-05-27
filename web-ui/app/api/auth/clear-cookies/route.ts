@@ -15,7 +15,7 @@ export async function POST() {
     const clearOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax" as const,
+        sameSite: "none" as const,
         path: "/",
         maxAge: 0,
     };
