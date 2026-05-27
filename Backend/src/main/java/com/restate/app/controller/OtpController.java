@@ -7,6 +7,7 @@ import com.restate.app.service.OtpService;
 import com.restate.app.utils.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/otp")
 @RequiredArgsConstructor
 public class OtpController {
+    
+    @Value("${project.frontendURL}")
+    private String frontendURL;
 
     private final OtpService otpService;
 
@@ -33,7 +37,8 @@ public class OtpController {
             ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(user.getRegistrationStep()))
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Strict")
+                    .sameSite("Lax")
+                    .domain(frontendURL)
                     .path("/")
                     .build();
 

@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,9 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
+
+    @Value("${project.frontendURL}")
+    private String frontendURL;
 
     private final AuthService authService;
     private final JWTService jwtService;
@@ -61,7 +65,8 @@ public class AuthController {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
+                .domain(frontendURL)
                 .path("/")
                 .maxAge(Duration.ofDays(1))
                 .build();
@@ -69,7 +74,8 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
+                .domain(frontendURL)
                 .path("/")
                 .maxAge(Duration.ofDays(30))
                 .build();
@@ -77,8 +83,9 @@ public class AuthController {
         ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(step))
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .path("/")
+                .domain(frontendURL)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -175,7 +182,8 @@ public class AuthController {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
+                .domain(frontendURL)
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -183,7 +191,8 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
+                .domain(frontendURL)
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -191,7 +200,8 @@ public class AuthController {
         ResponseCookie stepCookie = ResponseCookie.from("step", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("Lax")
+                .domain(frontendURL)
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -233,7 +243,8 @@ public class AuthController {
             ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(user.getRegistrationStep()))
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Strict")
+                    .sameSite("Lax")
+                    .domain(frontendURL)
                     .path("/")
                     .build();
 

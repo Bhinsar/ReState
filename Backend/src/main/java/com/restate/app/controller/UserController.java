@@ -1,5 +1,6 @@
 package com.restate.app.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -31,6 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserController {
 
+    @Value("${project.frontendURL}")
+    private String frontendURL;
+
     private final UserService userService;
 
     @GetMapping("/me")
@@ -60,24 +64,24 @@ public class UserController {
             ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Strict")
-                    .path("/")
+                    .sameSite("Lax")
+                    .domain(frontendURL)
                     .maxAge(0)
                     .build();
 
             ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Strict")
-                    .path("/")
+                    .sameSite("Lax")
+                    .domain(frontendURL)
                     .maxAge(0)
                     .build();
 
             ResponseCookie stepCookie = ResponseCookie.from("step", "")
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Strict")
-                    .path("/")
+                    .sameSite("Lax")
+                    .domain(frontendURL)
                     .maxAge(0)
                     .build();
 

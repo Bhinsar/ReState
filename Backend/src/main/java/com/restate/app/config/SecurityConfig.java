@@ -33,8 +33,6 @@ public class SecurityConfig {
     private final UserRepo userRepo;
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final RateLimitFilter rateLimitFilter;
-
-    // Automatically injects the clean CorsConfigurationSource bean from CorsConfig.java
     private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
