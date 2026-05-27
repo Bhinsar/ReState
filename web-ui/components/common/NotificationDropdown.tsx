@@ -6,6 +6,7 @@ import { Bell, Check, CheckCheck, Loader2, Building, Inbox } from 'lucide-react'
 import { useNotifications } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { getNotificationStyle } from './NotificationToast';
 
 export default function NotificationDropdown() {
   const router = useRouter();
@@ -163,18 +164,20 @@ export default function NotificationDropdown() {
                   )}
 
                   {/* Icon depending on type */}
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-xs",
-                    notification.isRead 
-                      ? "bg-gray-100 text-gray-500" 
-                      : "bg-blue-100 text-blue-600"
-                  )}>
-                    {notification.type === 'PROPERTY' || notification.propertyId ? (
-                      <Building className="w-4 h-4" />
-                    ) : (
-                      <Bell className="w-4 h-4" />
-                    )}
-                  </div>
+                  {(() => {
+                    const style = getNotificationStyle(notification.type);
+                    const IconComponent = style.icon;
+                    return (
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-xs",
+                        notification.isRead 
+                          ? "bg-gray-100 text-gray-400" 
+                          : style.bgClass.split(' ')[0] + " " + style.iconClass
+                      )}>
+                        <IconComponent className="w-4 h-4" />
+                      </div>
+                    );
+                  })()}
 
                   {/* Content details */}
                   <div className="flex-1 min-w-0">

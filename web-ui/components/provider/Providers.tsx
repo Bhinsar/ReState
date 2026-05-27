@@ -9,6 +9,7 @@ import { registerFCMToken, listenToForegroundNotifications } from "@/services/fc
 import { NotificationService } from "@/services/notifications/notification.Service";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import NotificationToast from "@/components/common/NotificationToast";
 
 // Initialize QueryClient
 const queryClient = new QueryClient({
@@ -51,6 +52,19 @@ function SyncAuth() {
     staleTime: 5000,
   });
 
+  // Helper to show a beautiful premium custom toast
+  const showModernToast = (title: string, body: string, type?: string, propertyId?: string) => {
+    toast.custom((t) => (
+      <NotificationToast
+        title={title}
+        body={body}
+        type={type}
+        propertyId={propertyId}
+        onClose={() => toast.dismiss(t)}
+      />
+    ));
+  };
+
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
@@ -69,6 +83,7 @@ function SyncAuth() {
           const title = payload.notification?.title || payload.data?.title || "New Notification";
           const body = payload.notification?.body || payload.data?.body || "";
           const propertyId = payload.data?.propertyId;
+          const type = payload.data?.type;
 
           const notificationId = payload.data?.id || payload.data?.notificationId;
           const msgKey = notificationId || `${title}_${body}`;
@@ -79,16 +94,7 @@ function SyncAuth() {
             if (firstKey !== undefined) toastedKeys.current.delete(firstKey);
           }
 
-          toast.info(title, {
-            description: body,
-            duration: 5000,
-            action: propertyId ? {
-              label: "View",
-              onClick: () => {
-                router.push(`/properties/${propertyId}`);
-              }
-            } : undefined
-          });
+          showModernToast(title, body, type, propertyId);
         });
 
         if (unsub) {
@@ -155,16 +161,7 @@ function SyncAuth() {
               if (firstKey !== undefined) toastedKeys.current.delete(firstKey);
             }
 
-            toast.info(notification.title, {
-              description: notification.body,
-              duration: 5000,
-              action: notification.propertyId ? {
-                label: "View",
-                onClick: () => {
-                  router.push(`/properties/${notification.propertyId}`);
-                }
-              } : undefined
-            });
+            showModernToast(notification.title, notification.body, notification.type, notification.propertyId);
           });
 
           // Invalidate both notifications list and unread count to trigger UI updates
