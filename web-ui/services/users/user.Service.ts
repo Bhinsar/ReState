@@ -35,6 +35,9 @@ export class UserService {
     static async deleteMe(): Promise<void> {
         try {
             await api.delete(userApiEndPoints.DELETE_ME);
+            // Clear httpOnly cookies that were set by the Next.js server (frontend domain).
+            // The Spring Boot backend cannot clear these — only the Next.js server can.
+            await fetch("/api/auth/clear-cookies", { method: "POST" });
             useAuthStore.getState().clearUser();
         } catch (e) {
             throw e;
