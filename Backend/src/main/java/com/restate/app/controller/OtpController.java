@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/v1/otp")
 @RequiredArgsConstructor
@@ -32,13 +34,13 @@ public class OtpController {
 
         String message = "Email verified successfully";
         AuthResponse data = AuthResponse.forWeb(user);
-
+        String domainName = URI.create(frontendURL).getHost();
         if (!"mobile".equals(clientType)) {
             ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(user.getRegistrationStep()))
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Lax")
-                    .domain(frontendURL)
+                    .domain(domainName)
                     .path("/")
                     .build();
 

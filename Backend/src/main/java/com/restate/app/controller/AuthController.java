@@ -20,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -62,11 +63,12 @@ public class AuthController {
     }
 
     private void addCookie(HttpServletResponse response, String accessToken, String refreshToken, User.RegisterStep step) {
+        String domainName = URI.create(frontendURL).getHost();
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .domain(frontendURL)
+                .domain(domainName)
                 .path("/")
                 .maxAge(Duration.ofDays(1))
                 .build();
@@ -75,7 +77,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .domain(frontendURL)
+                .domain(domainName)
                 .path("/")
                 .maxAge(Duration.ofDays(30))
                 .build();
@@ -84,8 +86,8 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
+                .domain(domainName)
                 .path("/")
-                .domain(frontendURL)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -179,11 +181,12 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
+        String domainName = URI.create(frontendURL).getHost();
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .domain(frontendURL)
+                .domain(domainName)
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -192,7 +195,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .domain(frontendURL)
+                .domain(domainName)
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -201,7 +204,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .domain(frontendURL)
+                .domain(domainName)
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -239,12 +242,13 @@ public class AuthController {
         User user =  authService.regiseruser(request, email);
         String message = "User registered successfully";
         AuthResponse data = AuthResponse.forWeb(user);
+        String domainName = URI.create(frontendURL).getHost();
         if (!"mobile".equals(clientType)) {
             ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(user.getRegistrationStep()))
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Lax")
-                    .domain(frontendURL)
+                    .domain(domainName)
                     .path("/")
                     .build();
 

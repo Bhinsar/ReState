@@ -27,6 +27,8 @@ import com.restate.app.utils.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -59,13 +61,13 @@ public class UserController {
             @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType,
             HttpServletResponse response) {
         userService.deleteMe(user);
-
+        String domainName = URI.create(frontendURL).getHost();
         if (!"mobile".equals(clientType)) {
             ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Lax")
-                    .domain(frontendURL)
+                    .domain(domainName)
                     .maxAge(0)
                     .build();
 
@@ -73,7 +75,7 @@ public class UserController {
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Lax")
-                    .domain(frontendURL)
+                    .domain(domainName)
                     .maxAge(0)
                     .build();
 
@@ -81,7 +83,7 @@ public class UserController {
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Lax")
-                    .domain(frontendURL)
+                    .domain(domainName)
                     .maxAge(0)
                     .build();
 
