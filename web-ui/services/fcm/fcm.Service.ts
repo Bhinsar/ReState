@@ -41,8 +41,17 @@ export const getFCMToken = async (): Promise<string | undefined> => {
     const messaging = getMessagingInstance();
     if (!messaging) return;
 
-    // Use a clean, static endpoint file structure for the Service Worker
-    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    // Build query parameters to pass Firebase config to the Service Worker
+    const queryParams = new URLSearchParams({
+      apiKey: firebaseConfig.apiKey || "",
+      authDomain: firebaseConfig.authDomain || "",
+      projectId: firebaseConfig.projectId || "",
+      storageBucket: firebaseConfig.storageBucket || "",
+      messagingSenderId: firebaseConfig.messagingSenderId || "",
+      appId: firebaseConfig.appId || ""
+    }).toString();
+
+    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${queryParams}`);
     
     // Wait for activation
     if (!registration.active) {
@@ -93,13 +102,26 @@ export const registerFCMToken = async (): Promise<boolean> => {
 
 export const unRegisterFCMToken = async (): Promise<boolean> => {
   try {
-    if (typeof window === "undefined") return false;
+    if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return false;
     
     const messaging = getMessagingInstance();
     if (!messaging) return false;
 
-    // Direct token retrieval without reinvoking the registration bootstrap process
-    const token = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FCM_VAPID_KEY });
+    // Retrieve active service worker registration or register it with config
+    const queryParams = new URLSearchParams({
+      apiKey: firebaseConfig.apiKey || "",
+      authDomain: firebaseConfig.authDomain || "",
+      projectId: firebaseConfig.projectId || "",
+      storageBucket: firebaseConfig.storageBucket || "",
+      messagingSenderId: firebaseConfig.messagingSenderId || "",
+      appId: firebaseConfig.appId || ""
+    }).toString();
+    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${queryParams}`);
+
+    const token = await getToken(messaging, { 
+      vapidKey: process.env.NEXT_PUBLIC_FCM_VAPID_KEY,
+      serviceWorkerRegistration: registration
+    });
     if (!token) return false;
 
     const response = await api.delete(API_ENDPOINTS.FCM_UNREGISTER, {
