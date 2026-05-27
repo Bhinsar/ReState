@@ -1,9 +1,7 @@
-import { useAuthStore } from "@/lib/store/authStore";
 import { authResponse } from "@/services/auth/auth.Interface";
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { cookies } from "next/headers";
-import { da } from "zod/v4/locales";
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -19,6 +17,8 @@ export const authOptions: NextAuthOptions = {
             },
         }),
     ],
+
+    secret: process.env.NEXTAUTH_SECRET,
 
     pages: {
         signIn: "/login",
