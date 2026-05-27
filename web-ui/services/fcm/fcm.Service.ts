@@ -40,8 +40,6 @@ export const getFCMToken = async (): Promise<string | undefined> => {
 
     const messaging = getMessagingInstance();
     if (!messaging) return;
-    console.log("Messaging instance:", messaging);
-    console.log("Firebase config:", firebaseConfig);
     // Build query parameters to pass Firebase config to the Service Worker
     const queryParams = new URLSearchParams({
       apiKey: firebaseConfig.apiKey || "",

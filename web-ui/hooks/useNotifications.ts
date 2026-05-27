@@ -12,7 +12,10 @@ export function useNotifications(enabled: boolean = true) {
   } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => NotificationService.getAllNotifications(),
-    enabled
+    enabled,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 5000,
   });
 
   // Query to fetch unread notification count
@@ -22,6 +25,9 @@ export function useNotifications(enabled: boolean = true) {
   } = useQuery({
     queryKey: ["notifications", "unreadCount"],
     queryFn: () => NotificationService.unreadCount(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 5000,
   });
 
   // Mutation to mark a single notification as read
