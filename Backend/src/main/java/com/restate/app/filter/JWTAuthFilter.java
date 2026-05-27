@@ -52,6 +52,13 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 
         // Token present → try to validate it
         try {
+            // Reject immediately if this token was explicitly invalidated (logout / account deletion)
+            if (Boolean.TRUE.equals(redisObjectTemplate.hasKey("token_blocklist:" + token))) {
+                SecurityContextHolder.clearContext();
+                handlerExceptionResolver.resolveException(request, response, null, AuthException.tokenExpired());
+                return;
+            }
+
             String email = jwtService.extractUsername(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {

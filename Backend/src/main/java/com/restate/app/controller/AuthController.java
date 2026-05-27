@@ -8,10 +8,12 @@ import com.restate.app.repository.UserRepo;
 import com.restate.app.service.AuthService;
 import com.restate.app.service.JWTService;
 import com.restate.app.utils.ApiResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.Arrays;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -39,6 +42,7 @@ public class AuthController {
     private final AuthService authService;
     private final JWTService jwtService;
     private final UserRepo userRepo;
+    private final RedisTemplate<String, Object> redisObjectTemplate;
 
     private ResponseEntity<ApiResponse<AuthResponse>> buildAuthResponse(
             User user, String clientType, HttpServletResponse response, boolean isNewRegistration) {
@@ -87,6 +91,23 @@ public class AuthController {
                 .sameSite("None")
                 .path("/")
                 .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
+    }
+
+    /**
+     * Clears all auth cookies by setting their maxAge to 0.
+     * Must use the same attributes (secure, sameSite, path) as when they were set.
+     */
+    public static void clearAuthCookies(HttpServletResponse response) {
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true).secure(true).sameSite("None").path("/").maxAge(0).build();
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true).secure(true).sameSite("None").path("/").maxAge(0).build();
+        ResponseCookie stepCookie = ResponseCookie.from("step", "")
+                .httpOnly(true).secure(true).sameSite("None").path("/").maxAge(0).build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
@@ -178,39 +199,30 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/")
-                .maxAge(0)
-                .build();
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        // Blocklist the accessToken in Redis so it cannot be reused before expiry
+        if (request.getCookies() != null) {
+            Arrays.stream(request.getCookies())
+                    .filter(c -> "accessToken".equals(c.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .ifPresent(token -> {
+                        try {
+                            long remainingMs = jwtService.getExpirationMs(token);
+                            if (remainingMs > 0) {
+                                redisObjectTemplate.opsForValue()
+                                        .set("token_blocklist:" + token, "logout",
+                                                Duration.ofMillis(remainingMs));
+                            }
+                        } catch (Exception ignored) {
+                            // Token already expired — nothing to blocklist
+                        }
+                    });
+        }
 
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/")
-                .maxAge(0)
-                .build();
+        clearAuthCookies(response);
 
-        ResponseCookie stepCookie = ResponseCookie.from("step", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        response.addHeader(HttpHeaders.SET_COOKIE, stepCookie.toString());
-
-        String message = "Successfully lout the user";
-
-        return ApiResponse.ok(message);
-
+        return ApiResponse.ok("Successfully logged out the user");
     }
 
     @PostMapping("/google")

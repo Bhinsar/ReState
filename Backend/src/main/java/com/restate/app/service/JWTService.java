@@ -39,14 +39,24 @@ public class JWTService {
 //    }
 
     public boolean isTokenExpired(String token) {
-        Date expiration = Jwts.parser()
+        return getExpiration(token).before(new Date());
+    }
+
+    /**
+     * Returns the remaining time-to-live of the token in milliseconds.
+     * A negative value means the token is already expired.
+     */
+    public long getExpirationMs(String token) {
+        return getExpiration(token).getTime() - System.currentTimeMillis();
+    }
+
+    private Date getExpiration(String token) {
+        return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getExpiration();
-
-        return expiration.before(new Date());   // Correct: expired if expiration time is before now
     }
 
     private SecretKey getSigningKey() {
