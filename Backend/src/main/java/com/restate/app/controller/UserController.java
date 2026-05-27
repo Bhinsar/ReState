@@ -61,29 +61,28 @@ public class UserController {
             @RequestHeader(value = "X-Client-Type", defaultValue = "web") String clientType,
             HttpServletResponse response) {
         userService.deleteMe(user);
-        String domainName = URI.create(frontendURL).getHost();
         if (!"mobile".equals(clientType)) {
             ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Lax")
-                    .domain(domainName)
+                    .sameSite("None")
+                    .path("/")
                     .maxAge(0)
                     .build();
 
             ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Lax")
-                    .domain(domainName)
+                    .sameSite("None")
+                    .path("/")
                     .maxAge(0)
                     .build();
 
             ResponseCookie stepCookie = ResponseCookie.from("step", "")
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Lax")
-                    .domain(domainName)
+                    .sameSite("None")
+                    .path("/")
                     .maxAge(0)
                     .build();
 

@@ -63,12 +63,12 @@ public class AuthController {
     }
 
     private void addCookie(HttpServletResponse response, String accessToken, String refreshToken, User.RegisterStep step) {
-        String domainName = URI.create(frontendURL).getHost();
+        // SameSite=None is required for cross-origin requests (frontend and backend on different domains).
+        // Do NOT set .domain() to the frontend host — cookies must be scoped to the backend's own domain.
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                .domain(domainName)
+                .sameSite("None")
                 .path("/")
                 .maxAge(Duration.ofDays(1))
                 .build();
@@ -76,8 +76,7 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                .domain(domainName)
+                .sameSite("None")
                 .path("/")
                 .maxAge(Duration.ofDays(30))
                 .build();
@@ -85,8 +84,7 @@ public class AuthController {
         ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(step))
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                .domain(domainName)
+                .sameSite("None")
                 .path("/")
                 .build();
 
@@ -181,12 +179,10 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        String domainName = URI.create(frontendURL).getHost();
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                .domain(domainName)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -194,8 +190,7 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                .domain(domainName)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -203,8 +198,7 @@ public class AuthController {
         ResponseCookie stepCookie = ResponseCookie.from("step", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                .domain(domainName)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -242,13 +236,11 @@ public class AuthController {
         User user =  authService.regiseruser(request, email);
         String message = "User registered successfully";
         AuthResponse data = AuthResponse.forWeb(user);
-        String domainName = URI.create(frontendURL).getHost();
         if (!"mobile".equals(clientType)) {
             ResponseCookie stepCookie = ResponseCookie.from("step", String.valueOf(user.getRegistrationStep()))
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Lax")
-                    .domain(domainName)
+                    .sameSite("None")
                     .path("/")
                     .build();
 
