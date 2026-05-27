@@ -2,7 +2,7 @@ import axios, {AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosRespo
 import {toast} from "sonner";
 import {AuthService} from "@/services/auth/auth.Service";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const BASE_URL = typeof window !== 'undefined' ? '/api/v1' : process.env.NEXT_PUBLIC_API_URL;
 
 export interface PageMeta {
     currentPage: number;
@@ -103,6 +103,7 @@ api.interceptors.response.use(
             try{
                 const {data} = await axios.post<ApiResponse<null>>(
                     `${BASE_URL}/auth/refresh-token`,
+                    null,
                     {withCredentials: true},
                 )
 

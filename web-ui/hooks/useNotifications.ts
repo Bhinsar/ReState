@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NotificationService } from "@/services/notifications/notification.Service";
 
-export function useNotifications() {
+export function useNotifications(enabled: boolean = true) {
   const queryClient = useQueryClient();
 
   // Query to fetch all notifications
@@ -12,6 +12,7 @@ export function useNotifications() {
   } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => NotificationService.getAllNotifications(),
+    enabled
   });
 
   // Query to fetch unread notification count
