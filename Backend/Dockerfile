@@ -33,7 +33,7 @@ RUN chown -R spring:spring /app
 # Now switch to the secure, non-root user
 USER spring
 
-EXPOSE 8080
+EXPOSE 7860
 
 # Writes the environment variable to a file right before running the JAR
 ENTRYPOINT ["sh", "-c", "echo \"$FIREBASE_CONFIG_JSON\" > firebase-service-account.json && java -jar app.jar"]
