@@ -47,7 +47,7 @@ public class ChatService {
     private String frontendURL;
 
     @Transactional
-    public void sendMessage(String conversationId, String content, String email) throws FirebaseMessagingException {
+    public void sendMessage(String conversationId, String content, String email){
         Conversation conversation = conversationRepo.findById(conversationId)
                 .orElseThrow(ChatException::conversationNotFound);
 
@@ -105,7 +105,11 @@ public class ChatService {
 
         // Send push notification via FCM only if recipient is offline or not actively viewing this conversation
         if (!recipient.isOnline() || !activeChatTracker.isUserInConversation(recipient.getEmail(), conversationId)) {
+            try {
             userDeviceService.sendToUser(notification);
+            } catch (Exception e) {
+                log.error("Failed to send FCM notification for message in chat: {}", e.getMessage());
+            }
         } else {
             log.info("Skipping push notification for conversation {}; recipient is online and actively viewing it.", conversationId);
         }

@@ -34,7 +34,7 @@ public class ChatController {
     @MessageMapping("/chat.send")
     public void sendMessage(
             @Payload SendMessageRequest request,
-            Principal principal) throws FirebaseMessagingException {
+            Principal principal) {
 
         chatService.sendMessage(
                 request.conversationId(),
