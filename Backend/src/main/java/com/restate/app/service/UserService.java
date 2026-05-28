@@ -75,7 +75,7 @@ public class UserService {
         user.setIsDeleted(true);
         user.setDeletedAt(Instant.now());
         userRepo.save(user);
-        evictUserCache(user); // Invalidate cache on soft-delete
+        evictUserCache(user);
     }
 
     public void changePassword(User user, ChangePasswordRequest request) {

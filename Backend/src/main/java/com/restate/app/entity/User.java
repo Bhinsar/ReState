@@ -90,6 +90,14 @@ public class User implements UserDetails {
     @Column(name = "register_step", nullable = false)
     private RegisterStep registrationStep = RegisterStep.REGISTERED;
 
+    @Builder.Default
+    @Column(name = "is_online", nullable = false)
+    private boolean isOnline = false;
+
+    @Column(name = "last_seen",
+            columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private Instant lastSeen;
+
     // --- Spring Security UserDetails Implementation ---
 
     @Override

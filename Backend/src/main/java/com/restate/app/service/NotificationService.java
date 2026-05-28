@@ -1,5 +1,11 @@
 package com.restate.app.service;
 
+import java.time.Instant;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.restate.app.dto.notification.NotificationResponse;
 import com.restate.app.entity.Notification;
@@ -9,12 +15,8 @@ import com.restate.app.exception.notification.NotificationException;
 import com.restate.app.exception.property.PropertyException;
 import com.restate.app.repository.NotificationRepo;
 import com.restate.app.repository.PropertyRepo;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class NotificationService {
     private final NotificationRepo notificationRepo;
     private final PropertyRepo propertyRepo;
     private final UserDeviceService userDeviceService;
+    private final ChatService chatService;
 
     public void notifyPropertyInterset(String propertyId, User user ) throws FirebaseMessagingException {
         if (notificationRepo.existsByPropertyIdAndSenderIdAndType(propertyId, user.getId(), Notification.NotificationType.PROPERTY_INTEREST)) {
@@ -43,13 +46,16 @@ public class NotificationService {
                         + " in " + property.getAddress().getCity())
                 .property(property)
                 .build();
-
+    
+                
         // Save to DB first — persists even if FCM fails
         Notification saved = notificationRepo.save(notification);
 
         // Send FCM — only fires if owner has devices registered
         userDeviceService.sendToUser(saved);
 
+        // Initialize chat conversation and send interest message
+        chatService.startPropertyInterestConversation(user, property);
     }
 
     // ── Get all notifications for a user ───────────────────────────

@@ -1,6 +1,7 @@
 package com.restate.app.exception;
 
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.restate.app.exception.chat.ChatException;
 import com.restate.app.utils.ApiResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.core.Ordered;
@@ -90,5 +91,4 @@ public class GlobalExceptionHandler {
         log.error("FirebaseMessagingException exception: {}", ex.getMessage(), ex);
         return ApiResponse.internalError(ex.getMessage());
     }
-
 }

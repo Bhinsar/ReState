@@ -34,7 +34,6 @@ public class FirebaseConfig {
             byte[] jsonBytes;
             String cleanedStr = firebaseConfigJson.trim();
 
-            // Check if it's Base64 (doesn't start with JSON open brace)
             if (!cleanedStr.startsWith("{")) {
                 // Strip any accidental wrapping env quotes if present
                 if (cleanedStr.startsWith("\"") && cleanedStr.endsWith("\"")) {
