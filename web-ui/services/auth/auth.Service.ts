@@ -3,6 +3,7 @@ import { authApiEndPont } from "@/services/auth/auth.ApiEndponts";
 import { api } from '@/services/api'
 import { useAuthStore } from "@/lib/store/authStore";
 import { registerFCMToken, unRegisterFCMToken } from "../fcm/fcm.Service";
+import webSoketService from "../webSocket/webSoket.Service";
 
 export class AuthService {
     static async login(data: loginParams): Promise<authResponse> {
@@ -10,6 +11,7 @@ export class AuthService {
             const res = await api.post<authResponse>(authApiEndPont.login, data)
             await registerFCMToken()
             useAuthStore.getState().setUser(res.data);
+            await webSoketService.connect();
             return res.data;
         } catch (e) {
             throw e;
@@ -21,6 +23,7 @@ export class AuthService {
             const res = await api.post<authResponse>(authApiEndPont.register, data)
             await registerFCMToken()
             useAuthStore.getState().setUser(res.data);
+            await webSoketService.connect();
             return res.data;
         } catch (e) {
             throw e;
@@ -54,7 +57,9 @@ export class AuthService {
         try {
             await unRegisterFCMToken()
             await api.post(authApiEndPont.logout)
+            webSoketService.disconnect();
             useAuthStore.getState().clearUser();
+            window.location.href = "/";
         } catch (e) {
             throw e
         }

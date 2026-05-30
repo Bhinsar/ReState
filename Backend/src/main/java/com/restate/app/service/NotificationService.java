@@ -2,9 +2,11 @@ package com.restate.app.service;
 
 import java.time.Instant;
 
+import com.restate.app.entity.Conversation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.restate.app.dto.notification.NotificationResponse;
@@ -44,18 +46,19 @@ public class NotificationService {
                         + " showed interest in "
                         + property.getTitle()
                         + " in " + property.getAddress().getCity())
-                .property(property)
                 .build();
-    
+
+        Conversation conversation = chatService.startPropertyInterestConversation(user, property);
+
                 
         // Save to DB first — persists even if FCM fails
+        notification.setConversation(conversation);
         Notification saved = notificationRepo.save(notification);
 
         // Send FCM — only fires if owner has devices registered
         userDeviceService.sendToUser(saved);
 
         // Initialize chat conversation and send interest message
-        chatService.startPropertyInterestConversation(user, property);
     }
 
     // ── Get all notifications for a user ───────────────────────────
@@ -74,6 +77,7 @@ public class NotificationService {
     }
 
     // ── Mark single notification as read ──────────────────────────
+    @Transactional
     public void markAsRead(String notificationId, String email) {
         Notification notification = notificationRepo
                 .findById(notificationId)
@@ -88,6 +92,7 @@ public class NotificationService {
         notificationRepo.save(notification);
     }
 
+    @Transactional
     public void markAllAsRead(User user) {
         notificationRepo.markAllAsRead(user, Instant.now());
     }

@@ -10,6 +10,7 @@ import { NotificationService } from "@/services/notifications/notification.Servi
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import NotificationToast from "@/components/common/NotificationToast";
+import webSoketService from "@/services/webSocket/webSoket.Service";
 
 // Initialize QueryClient
 const queryClient = new QueryClient({
@@ -73,6 +74,15 @@ function SyncAuth() {
         // We cast session.user because we've ensured it matches authResponse in the route callbacks
         setUser(session.user as authResponse);
         await registerFCMToken();
+        
+        // Auto-connect WebSocket when authorized
+        try {
+          if (!webSoketService.getIsConnected()) {
+            await webSoketService.connect();
+          }
+        } catch (error) {
+          console.error("Failed to auto-connect WebSocket:", error);
+        }
         
         // Listen to foreground push notifications
         const unsub = listenToForegroundNotifications((payload) => {

@@ -6,7 +6,7 @@ import { NavItem } from "@/data/navItems";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { CircleUser, LogIn, LogOut, User, Settings, ChevronDown, List } from "lucide-react";
+import { CircleUser, LogIn, LogOut, User, Settings, ChevronDown, List, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,17 @@ function Nav() {
     const { isAuthenticated, user, clearUser } = useAuthStore();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const navItemsToRender = isAuthenticated
+        ? [
+              ...NavItem,
+              {
+                  label: "Messages",
+                  to: "/chat",
+                  icon: <MessageSquare size={18} />
+              }
+          ]
+        : NavItem;
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -60,7 +71,7 @@ function Nav() {
                     <div className="flex items-center gap-2">
                         <div className="hidden md:flex items-center gap-1">
 
-                        {NavItem.map((item) => {
+                        {navItemsToRender.map((item) => {
                             const isActive = pathname === item.to;
                             return (
                                 <Link
@@ -139,6 +150,14 @@ function Nav() {
                                                     <User className="w-4 h-4 transition-transform group-hover:scale-110" />
                                                     My Profile
                                                 </Link>
+                                                <Link 
+                                                    href="/chat" 
+                                                    className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
+                                                    onClick={() => setIsDropdownOpen(false)}
+                                                >
+                                                    <MessageSquare className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                                    Messages
+                                                </Link>
                                                 {/* <Link 
                                                     href="/settings" 
                                                     className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
@@ -179,7 +198,7 @@ function Nav() {
         {/* Mobile Bottom Navigation */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-6 py-3 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
                 <div className="flex justify-around items-center max-w-md mx-auto">
-                    {NavItem.map((item) => {
+                    {navItemsToRender.map((item) => {
                         const isActive = pathname === item.to;
                         return (
                             <Link

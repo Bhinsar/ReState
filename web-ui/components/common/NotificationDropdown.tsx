@@ -35,7 +35,7 @@ export default function NotificationDropdown() {
     }
   }, [isOpen]);
 
-  const handleNotificationClick = async (id: string, propertyId?: string) => {
+  const handleNotificationClick = async (id: string, propertyId?: string, conversationId?: string) => {
     // Mark as read
     readNotification(id);
     
@@ -43,7 +43,9 @@ export default function NotificationDropdown() {
     setIsOpen(false);
     
     // Navigate if there's a property association
-    if (propertyId) {
+    if (conversationId) {
+      router.push(`/chat?conversationId=${conversationId}`);
+    } else if (propertyId) {
       router.push(`/properties/${propertyId}`);
     }
   };
@@ -109,7 +111,7 @@ export default function NotificationDropdown() {
                 {unreadCount > 0 ? `${unreadCount} unread` : 'No unread notifications'}
               </p>
             </div>
-            {unreadCount > 0 && (
+            {unreadCount > 0 && notifications.length > 0 && (
               <button
                 onClick={handleMarkAllRead}
                 className="cursor-pointer text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 hover:underline transition-colors"

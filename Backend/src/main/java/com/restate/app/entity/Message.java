@@ -45,11 +45,11 @@ public class Message {
     @Column(name = "attachment_url", length = 500)
     private String attachmentUrl;
 
-    @Column(name = "attachment_name", length = 200)
-    private String attachmentName;
-
-    @Column(name = "attachment_size")
-    private Long attachmentSize;
+//    @Column(name = "attachment_name", length = 200)
+//    private String attachmentName;
+//
+//    @Column(name = "attachment_size")
+//    private Long attachmentSize;
 
     @Builder.Default
     @Column(name = "is_read", nullable = false)

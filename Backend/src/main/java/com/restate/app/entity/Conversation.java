@@ -15,22 +15,34 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "conversation")
+@Table(name = "conversations")
 public class Conversation {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)  // ← fixed
+    @Column(name = "conversation_id",
+            updatable = false,
+            nullable = false)
     private String conversationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_one_id", nullable = false)
+    @JoinColumn(name = "user_one_id", nullable = false,
+            foreignKey = @ForeignKey(
+                    foreignKeyDefinition = "FOREIGN KEY (user_one_id) " +
+                            "REFERENCES users(id) ON DELETE CASCADE"
+            ))
     private User userOne;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_two_id", nullable = false)
+    @JoinColumn(name = "user_two_id", nullable = false,
+            foreignKey = @ForeignKey(
+                    foreignKeyDefinition = "FOREIGN KEY (user_two_id) " +
+                            "REFERENCES users(id) ON DELETE CASCADE"
+            ))
     private User userTwo;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 10)
     @Builder.Default
     private ConversationStatus status = ConversationStatus.ACTIVE;
 
@@ -44,16 +56,15 @@ public class Conversation {
             columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant updatedAt;
 
-    public enum ConversationStatus{
+    public enum ConversationStatus {
         ACTIVE, BLOCKED
     }
-    // Helper — get other person from current user
+
     public User getOtherPerson(User me) {
         return userOne.getId().equals(me.getId())
                 ? userTwo : userOne;
     }
 
-    // Helper — check if user is participant
     public boolean isParticipant(User user) {
         return userOne.getId().equals(user.getId()) ||
                 userTwo.getId().equals(user.getId());

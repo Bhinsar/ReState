@@ -1,6 +1,7 @@
 package com.restate.app.config;
 
 import com.restate.app.filter.WebSocketAuthInterceptor;
+import com.restate.app.filter.WebSocketHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import org.springframework.web.socket.config.annotation.*;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final WebSocketAuthInterceptor authInterceptor;
+    private final WebSocketHandshakeInterceptor handshakeInterceptor;
     @Value("${project.frontendURL}")
     private String frontendURL;
 
@@ -34,8 +36,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
+        registry.addEndpoint("/api/v1/ws", "/ws")
                 .setAllowedOriginPatterns(frontendURL)
+                .addInterceptors(handshakeInterceptor)
                 .withSockJS();
     }
 

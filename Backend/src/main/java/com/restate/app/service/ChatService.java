@@ -1,11 +1,23 @@
 package com.restate.app.service;
 
+import java.beans.Transient;
+import java.time.Instant;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.restate.app.dto.chat.ConversationResponse;
+import com.restate.app.dto.chat.ConversationSummaryDTO;
 import com.restate.app.dto.chat.MessageResponse;
+import com.restate.app.dto.chat.OtherUser;
+import com.restate.app.dto.chat.SendMessageRequest;
 import com.restate.app.dto.chat.TypingRequest;
 import com.restate.app.dto.notification.NotificationResponse;
-import com.restate.app.dto.user.UserResponse;
 import com.restate.app.entity.Conversation;
 import com.restate.app.entity.Message;
 import com.restate.app.entity.Notification;
@@ -17,18 +29,10 @@ import com.restate.app.repository.ConversationRepo;
 import com.restate.app.repository.MessageRepo;
 import com.restate.app.repository.NotificationRepo;
 import com.restate.app.repository.UserRepo;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -46,10 +50,9 @@ public class ChatService {
     @Value("${project.frontendURL}")
     private String frontendURL;
 
-    @Transactional
-    public void sendMessage(String conversationId, String content, String email){
-        Conversation conversation = conversationRepo.findById(conversationId)
-                .orElseThrow(ChatException::conversationNotFound);
+    public void sendMessage(SendMessageRequest request, String email){
+        Conversation conversation = conversationRepo.findByIdWithParticipants(request.conversationId())
+                .orElseThrow(ChatException::conversationNotFoundWithId);
 
         User sender = userRepo.findByEmail(email)
                 .orElseThrow(AuthException::noUserFound);
@@ -66,7 +69,8 @@ public class ChatService {
         Message message = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
-                .content(content)
+                .content(request.content())
+                .attachmentUrl(request.attachmentUrl())
                 .messageType(Message.MessageType.TEXT)
                 .isRead(false)
                 .sentAt(Instant.now())
@@ -81,20 +85,23 @@ public class ChatService {
         MessageResponse response = MessageResponse.from(message);
 
         // Broadcast message to the conversation topic
-        messagingTemplate.convertAndSend("/topic/conversation/" + conversationId, response);
+        messagingTemplate.convertAndSend("/topic/conversation/" + request.conversationId(), response);
 
         // Create and save database notification for the recipient
         User recipient = conversation.getOtherPerson(sender);
+        String notificationBody = (request.content() != null && !request.content().isBlank())
+                ? request.content()
+                : "Sent an attachment: " + request.attachmentUrl();
         Notification notification = Notification.builder()
                 .recipient(recipient)
                 .sender(sender)
                 .type(Notification.NotificationType.NEW_MESSAGE)
                 .title("New message from " + sender.getFirstName())
-                .body(content)
+                .body(notificationBody)
                 .isRead(false)
                 .createdAt(Instant.now())
                 .build();
-        notificationRepo.save(notification);
+//        notificationRepo.save(notification);
 
         // Send WebSocket notification to the recipient's private queue
         messagingTemplate.convertAndSendToUser(
@@ -103,21 +110,22 @@ public class ChatService {
                 NotificationResponse.from(notification)
         );
 
-        // Send push notification via FCM only if recipient is offline or not actively viewing this conversation
-        if (!recipient.isOnline() || !activeChatTracker.isUserInConversation(recipient.getEmail(), conversationId)) {
+        // Send push notification via FCM only if recipient is not actively viewing this conversation.
+        // activeChatTracker is the live, real-time source of truth — no stale DB flags needed.
+        if (!activeChatTracker.isUserInConversation(recipient.getEmail(), request.conversationId())) {
             try {
-            userDeviceService.sendToUser(notification);
+                userDeviceService.sendToUser(notification);
             } catch (Exception e) {
                 log.error("Failed to send FCM notification for message in chat: {}", e.getMessage());
             }
         } else {
-            log.info("Skipping push notification for conversation {}; recipient is online and actively viewing it.", conversationId);
+            log.info("Skipping FCM for conversation {}; recipient is actively viewing it.", request.conversationId());
         }
     }
-
+    @Transactional
     public void markAsRead(String conversationId, String email) {
         Conversation conversation = conversationRepo.findById(conversationId)
-                .orElseThrow(ChatException::conversationNotFound);
+                .orElseThrow(ChatException::conversationNotFoundWithId);
 
         User user = userRepo.findByEmail(email)
                 .orElseThrow(AuthException::noUserFound);
@@ -133,9 +141,13 @@ public class ChatService {
         messagingTemplate.convertAndSend("/topic/conversation/" + conversationId + "/read", user.getId());
     }
 
-    public User typing(String email, TypingRequest request){
-        Conversation conversation = conversationRepo.findById(request.conversationId())
-                .orElseThrow(ChatException::conversationNotFound);
+    public record TypingResult(User sender, User recipient) {}
+
+    public TypingResult typing(String email, TypingRequest request){
+        // Use eager fetch query so userOne/userTwo are not lazy proxies —
+        // avoids LazyInitializationException when accessing them outside a session
+        Conversation conversation = conversationRepo.findByIdWithParticipants(request.conversationId())
+                .orElseThrow(ChatException::conversationNotFoundWithId);
 
         // Security check — only participants can send typing
         User sender = userRepo.findByEmail(email)
@@ -146,15 +158,16 @@ public class ChatService {
         }
 
         // Get the OTHER person only
-        return conversation.getOtherPerson(sender);
+        User recipient = conversation.getOtherPerson(sender);
+        return new TypingResult(sender, recipient);
     }
 
-    public void startPropertyInterestConversation(User sender, Property property) throws FirebaseMessagingException {
+    public Conversation startPropertyInterestConversation(User sender, Property property) throws FirebaseMessagingException {
         User owner = property.getOwner();
 
         // Don't start conversation with yourself
         if (sender.getId().equals(owner.getId())) {
-            return;
+            ChatException.conversationYourSelf();
         }
 
         // Find existing conversation between the two users
@@ -169,7 +182,7 @@ public class ChatService {
                 });
 
         if (conversation.getStatus() == Conversation.ConversationStatus.BLOCKED) {
-            return; // Don't send messages if blocked
+            ChatException.conversationIsBlocked(); // Don't send messages if blocked
         }
 
         // Format message content
@@ -185,7 +198,6 @@ public class ChatService {
                 .content(content)
                 .messageType(Message.MessageType.LINK)
                 .attachmentUrl(frontendURL + "/properties/" + property.getPropertyId())
-                .attachmentName(property.getTitle())
                 .isRead(false)
                 .sentAt(Instant.now())
                 .build();
@@ -193,7 +205,7 @@ public class ChatService {
 
         // Update conversation's updatedAt timestamp
         conversation.setUpdatedAt(Instant.now());
-        conversationRepo.save(conversation);
+        Conversation saveConversation = conversationRepo.save(conversation);
 
         // Map to response DTO
         MessageResponse response = MessageResponse.from(message);
@@ -221,49 +233,38 @@ public class ChatService {
         );
 
         // Send push notification via FCM only if recipient is offline or not actively viewing this conversation
-        if (!owner.isOnline() || !activeChatTracker.isUserInConversation(owner.getEmail(), conversation.getConversationId())) {
+        if (!owner.getIsOnline() || !activeChatTracker.isUserInConversation(owner.getEmail(), conversation.getConversationId())) {
             try {
                 userDeviceService.sendToUser(notification);
             } catch (Exception e) {
                 log.error("Failed to send FCM notification for message in property interest chat: {}", e.getMessage());
             }
         }
+        return saveConversation;
     }
 
     public Page<ConversationResponse> getConversations(User user, String search, Pageable pageable) {
-        Page<Conversation> conversations = conversationRepo.findConversationsForUser(user, search, pageable);
+        Page<ConversationSummaryDTO> summaries = conversationRepo.findConversationSummariesForUser(user, search, pageable).orElseThrow(ChatException::conversationNotFound);
 
-        return conversations.map(c -> {
-            User otherParticipant = c.getOtherPerson(user);
-            UserResponse otherResponse = UserResponse.from(otherParticipant);
-
-            // Fetch unread count for this user (messages sent by others that are unread)
-            long unreadCount = messageRepo.countByConversationConversationIdAndSenderIdNotAndIsReadFalse(
-                    c.getConversationId(), user.getId()
-            );
-
-            // Fetch last message of the conversation
-            Optional<Message> lastMessageOpt = messageRepo.findFirstByConversationConversationIdOrderBySentAtDesc(
-                    c.getConversationId()
-            );
-
-            String lastMessageContent = lastMessageOpt.map(Message::getContent).orElse(null);
-            Instant lastMessageTime = lastMessageOpt.map(Message::getSentAt).orElse(null);
+        // Spring Data Page.map() never returns null; it returns an empty Page if no results match.
+        return summaries.map(dto -> {
+            User otherParticipant = dto.conversation().getOtherPerson(user);
+            OtherUser otherResponse = OtherUser.from(otherParticipant);
 
             return new ConversationResponse(
-                    c.getConversationId(),
+                    dto.conversation().getConversationId(),
                     otherResponse,
-                    unreadCount,
-                    lastMessageContent,
-                    lastMessageTime,
-                    c.getStatus()
-                );
+                    dto.unreadCount(),
+                    dto.lastMessageContent(),
+                    dto.lastMessageTime(),
+                    dto.conversation().getStatus()
+            );
         });
     }
 
     public Page<MessageResponse> getMessages(String conversationId, User user, Pageable pageable) {
         Conversation conversation = conversationRepo.findById(conversationId)
-                .orElseThrow(ChatException::conversationNotFound);
+                .orElseThrow(ChatException::conversationNotFoundWithId);
 
         // Security check: only participants can view messages
         if (!conversation.isParticipant(user)) {

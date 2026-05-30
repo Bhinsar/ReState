@@ -133,7 +133,9 @@ public class UserDeviceService {
     private Map<String, String> buildData(Notification notification) {
         Map<String, String> data = new HashMap<>();
 
-        data.put("notificationId", notification.getNotificationId());
+        if (notification.getNotificationId() != null) {
+            data.put("notificationId", notification.getNotificationId());
+        }
         data.put("type",           notification.getType().name());
 
         // Add property id if present — client uses this to navigate

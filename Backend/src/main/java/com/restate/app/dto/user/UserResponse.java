@@ -15,6 +15,8 @@ public record UserResponse(
         String phoneNumber,
         Date dateOfBirth,
         User.Role role,
+        boolean isOnline,
+        Instant lastSeen,
         User.RegisterStep registerStep,
         Instant createdAt,
         Instant updatedAt
@@ -30,6 +32,8 @@ public record UserResponse(
                 user.getPhoneNumber(),
                 user.getDateOfBirth(),
                 user.getRole(),
+                user.getIsOnline(),
+                user.getLastSeen(),
                 user.getRegistrationStep(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()

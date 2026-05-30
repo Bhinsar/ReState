@@ -1,5 +1,8 @@
 package com.restate.app.filter;
 
+import com.restate.app.dto.chat.OnlineStatusEvent;
+import com.restate.app.entity.User;
+import com.restate.app.repository.ConversationRepo;
 import com.restate.app.repository.UserRepo;
 import com.restate.app.service.ActiveChatTracker;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,7 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import java.time.Instant;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ public class WebSocketEventListener {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final UserRepo userRepo;
+    private final ConversationRepo conversationRepo;
     private final ActiveChatTracker activeChatTracker;
 
     // ── User connects ──────────────────────────────────────────────
@@ -38,10 +43,13 @@ public class WebSocketEventListener {
         userRepo.findByEmail(email).ifPresent(user -> {
 
             // Mark online
-            user.setOnline(true);
+            user.setIsOnline(true);
             userRepo.save(user);
 
             log.info("User online: {}", email);
+
+            // Notify all conversation partners that this user is now online
+            broadcastPresence(user, true, null);
         });
     }
 
@@ -62,11 +70,14 @@ public class WebSocketEventListener {
         userRepo.findByEmail(email).ifPresent(user -> {
 
             // Mark offline + update last seen
-            user.setOnline(false);
+            user.setIsOnline(false);
             user.setLastSeen(Instant.now());
             userRepo.save(user);
 
             log.info("User offline: {}", email);
+
+            // Notify all conversation partners that this user is now offline
+            broadcastPresence(user, false, user.getLastSeen());
         });
     }
 
@@ -102,6 +113,24 @@ public class WebSocketEventListener {
         if (conversationId != null) {
             activeChatTracker.leaveConversation(email);
             log.info("User {} left conversation: {}", email, conversationId);
+        }
+    }
+
+    // ── Helper: fan-out presence event to all contacts ─────────────
+    private void broadcastPresence(User user, boolean isOnline, Instant lastSeen) {
+        try {
+            List<User> partners = conversationRepo.findConversationPartnersOf(user.getId());
+            OnlineStatusEvent event = new OnlineStatusEvent(user.getId(), isOnline, lastSeen);
+            for (User partner : partners) {
+                messagingTemplate.convertAndSendToUser(
+                        partner.getEmail(),
+                        "/queue/online-status",
+                        event
+                );
+            }
+            log.info("Broadcasted {} presence to {} contacts for user {}", isOnline ? "ONLINE" : "OFFLINE", partners.size(), user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to broadcast presence for user {}: {}", user.getEmail(), e.getMessage());
         }
     }
 }

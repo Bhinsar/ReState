@@ -92,7 +92,7 @@ public class User implements UserDetails {
 
     @Builder.Default
     @Column(name = "is_online", nullable = false)
-    private boolean isOnline = false;
+    private Boolean isOnline = false;
 
     @Column(name = "last_seen",
             columnDefinition = "TIMESTAMP WITH TIME ZONE")

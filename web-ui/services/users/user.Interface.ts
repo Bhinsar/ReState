@@ -34,6 +34,8 @@ export interface UserRes {
     dateOfBirth: Date;
     avatarUrl: string;
     registerStep: RegisterStep;
+    isOnline:boolean;
+    lastSeen:Date;
     createdAt: Date;
     updatedAt: Date;
 }
