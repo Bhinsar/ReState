@@ -44,7 +44,6 @@ public class SecurityConfig {
                         // Permits browser background validation checks instantly on production
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties/me").hasAnyAuthority("USER", "ROLE_USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties/**").permitAll()

@@ -8,7 +8,9 @@ class WebSoketService {
     private client : Client|null = null;
     private isConnected : boolean = false;
     private subscriptions: Map<string, StompSubscription> = new Map();
-    private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL!;
+    private baseUrl = typeof window !== 'undefined'
+    ? '/api/v1'
+    : `${process.env.NEXT_PUBLIC_API_URL!}/api/v1`;
 
     connect():Promise<void> {
         return new Promise((resolve, reject) => {
