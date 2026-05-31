@@ -56,8 +56,8 @@ export const authOptions: NextAuthOptions = {
                     const options: any = {
                         path: "/",
                         httpOnly: cookie.toLowerCase().includes("httponly"),
-                        secure: process.env.NODE_ENV === "production",
-                        sameSite: "lax",
+                        secure: true,
+                        sameSite: "none",
                     };
 
                     const maxAgePart = parts.find(p => p.trim().toLowerCase().startsWith("max-age"));
