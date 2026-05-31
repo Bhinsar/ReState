@@ -2,7 +2,9 @@ import axios, {AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosRespo
 import {toast} from "sonner";
 import {AuthService} from "@/services/auth/auth.Service";
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL!}/api/v1`;
+const BASE_URL = typeof window !== 'undefined'
+    ? '/api/v1'
+    : `${process.env.NEXT_PUBLIC_API_URL!}/api/v1`;
 
 export interface PageMeta {
     currentPage: number;
